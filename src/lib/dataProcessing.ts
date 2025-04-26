@@ -209,8 +209,8 @@ export function processRecentTransactions(transactions: ParsedTransactionWithMet
         to: "Unknown",
         amount: "0 SOL",
         timestamp: new Date().toISOString(),
-        status: "failed",
-        type: "unknown"
+        status: "failed" as const, // Use const assertion to fix the type
+        type: "unknown" as const  // Use const assertion to fix the type
       };
     }
     
@@ -225,7 +225,7 @@ export function processRecentTransactions(transactions: ParsedTransactionWithMet
     }
     
     // Determine transaction type
-    let type = "transfer";
+    let type: "transfer" | "swap" | "deposit" | "withdrawal" | "unknown" = "transfer";
     if (accountKeys.some(account => {
       const entity = identifyEntityType(account);
       return entity.type === 'exchange';
@@ -243,14 +243,18 @@ export function processRecentTransactions(transactions: ParsedTransactionWithMet
       }
     }
     
+    // Ensure status is one of the allowed values: "confirmed" | "pending" | "failed"
+    const status: "confirmed" | "pending" | "failed" = tx.meta.err ? "failed" : "confirmed";
+    
     return {
       id: tx.transaction.signatures[0].substring(0, 8),
       from: shortenAddress(sender),
       to: shortenAddress(receiver),
       amount,
       timestamp: tx.blockTime ? new Date(tx.blockTime * 1000).toISOString() : new Date().toISOString(),
-      status: tx.meta.err ? "failed" : "confirmed",
+      status,
       type
     };
   });
 }
+
