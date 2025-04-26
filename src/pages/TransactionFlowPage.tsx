@@ -2,8 +2,12 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TransactionFlow } from "@/components/visualization/TransactionFlow";
+import { WalletSearch } from "@/components/search/WalletSearch";
+import { useWalletData } from "@/hooks/useWalletData";
 
 const TransactionFlowPage = () => {
+  const { walletData, isLoading, analyzeWallet, walletAddress } = useWalletData();
+
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -14,11 +18,11 @@ const TransactionFlowPage = () => {
             <CardTitle>Flow Settings</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">Configure transaction flow visualization parameters.</p>
+            <WalletSearch onSearch={analyzeWallet} isLoading={isLoading} />
           </CardContent>
         </Card>
         
-        <TransactionFlow />
+        <TransactionFlow data={walletData?.flowData} isLoading={isLoading} />
       </div>
     </MainLayout>
   );
