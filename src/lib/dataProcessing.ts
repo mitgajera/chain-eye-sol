@@ -46,14 +46,20 @@ const knownEntities: Record<string, { name: string, type: string }> = {
   // Major CEXes deposit addresses
   '38XnKP91qt1YWxNpbG6gJ8LYYv8xPSfftSJ9TgzRTU1W': { name: 'Binance Hot Wallet', type: 'exchange' },
   'StakeYvgbJ7T8iLX3GmJMUiKWqAdkM7EQgSKnwQEuSK9': { name: 'Lido', type: 'staking' },
+  '9hKpwEX9oTYYxdSQHJBgveHGHfxTKqXw3GSNGxWTZE1z': { name: 'Coinbase', type: 'exchange' },
+  'FTbiUmGeVGEwkGJZb665xcyn5JL5xKMWXYEYGpKx8JkU': { name: 'FTX', type: 'exchange' },
+  'CEzN7mqP9xoxn2LmHk3LYgf1Qxm8HqMehyTYqBYXUK3T': { name: 'Kraken', type: 'exchange' },
   
   // NFT Marketplaces
   'M2mx93ekt1fmXSVkTrUL9xVFHkmME8HTUi5Cyc5aF7K': { name: 'Magic Eden', type: 'marketplace' },
   'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk': { name: 'Tensor', type: 'marketplace' },
+  'CJsLwbP1iu5DuUikHEJnLfANgKy6stB2uFgvBBHoyxwz': { name: 'Solanart', type: 'marketplace' },
   
   // Known protocols
   'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s': { name: 'Metaplex', type: 'protocol' },
   'wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb': { name: 'Wormhole', type: 'bridge' },
+  'So1endDq2YkqhipRh3WViPa8hdiSpxWy6z3Z6tMCpAo': { name: 'Solend', type: 'defi' },
+  'Port7uDYB3wk6GJAw4KT1WpTeMtSu9bTcChBHkX2LfR': { name: 'Port Finance', type: 'defi' },
 };
 
 export function identifyEntityType(address: string): { name: string, type: 'source' | 'exchange' | 'destination' | 'intermediate' | 'system' | 'program' | 'staking' | 'bridge' | 'marketplace' | 'protocol' | 'unknown' } {
@@ -305,8 +311,8 @@ export function processRecentTransactions(transactions: ParsedTransactionWithMet
         to: "Unknown",
         amount: "0 SOL",
         timestamp: new Date().toISOString(),
-        status: "failed" as const, // Use const assertion to fix the type
-        type: "unknown" as const  // Use const assertion to fix the type
+        status: "failed" as "confirmed" | "pending" | "failed", 
+        type: "unknown" as "transfer" | "swap" | "deposit" | "withdrawal" | "unknown"
       };
     }
     

@@ -10,8 +10,18 @@ import {
 } from '@/lib/dataProcessing';
 import { toast } from '@/hooks/use-toast';
 
-// Reduced polling interval to 30 seconds
-const REFRESH_INTERVAL = 30000;
+// Set refresh interval to exactly 1 minute (60000ms)
+const REFRESH_INTERVAL = 60000;
+
+export type Transaction = {
+  id: string;
+  from: string;
+  to: string;
+  amount: string;
+  timestamp: string;
+  status: "confirmed" | "pending" | "failed";
+  type: "transfer" | "swap" | "deposit" | "withdrawal" | "unknown";
+};
 
 export function useWalletData(address: string = '') {
   const [walletAddress, setWalletAddress] = useState<string>(address);
@@ -76,7 +86,7 @@ export function useWalletData(address: string = '') {
         const flowData = transactionsToFlowData(walletAddress, transactions);
         const activityData = processWalletActivity(transactions);
         const fundingData = processFundingSources(transactions);
-        const recentTxs = processRecentTransactions(transactions, walletAddress);
+        const recentTxs = processRecentTransactions(transactions, walletAddress) as Transaction[];
         
         // First and last activity dates
         let firstActivity = null;
@@ -97,6 +107,9 @@ export function useWalletData(address: string = '') {
           }
         }
         
+        // Create clusters data for clustering visualization
+        const clusterData = createClusters(transactions, walletAddress);
+        
         return {
           address: walletAddress,
           balance,
@@ -108,7 +121,8 @@ export function useWalletData(address: string = '') {
           firstActivity,
           lastActivity,
           totalTransactions: transactions.length,
-          lastRefreshed: new Date()
+          lastRefreshed: new Date(),
+          clusterData
         };
       } catch (err) {
         // Increment error count
@@ -127,9 +141,77 @@ export function useWalletData(address: string = '') {
     enabled: Boolean(walletAddress),
     retry: 2,
     retryDelay: attempt => Math.min(1000 * 2 ** attempt, 30000), // Exponential backoff
-    refetchInterval: REFRESH_INTERVAL, // Refetch data every 30 seconds
+    refetchInterval: REFRESH_INTERVAL, // Refetch data every 1 minute
     refetchIntervalInBackground: false,
   });
+
+  // Helper function to create clusters from transactions
+  function createClusters(transactions: any[], walletAddress: string) {
+    if (!transactions || transactions.length === 0) return [];
+    
+    const addressFrequency: Record<string, number> = {};
+    const clusters: { name: string, addresses: string[], txCount: number }[] = [];
+    
+    // Count address occurrences
+    transactions.forEach(tx => {
+      if (!tx.meta || !tx.transaction) return;
+      
+      const addresses = tx.transaction.message.accountKeys
+        .map((key: any) => key.pubkey.toString())
+        .filter((addr: string) => addr !== walletAddress);
+      
+      addresses.forEach(addr => {
+        addressFrequency[addr] = (addressFrequency[addr] || 0) + 1;
+      });
+    });
+    
+    // Form clusters based on frequency
+    const highFrequency = Object.entries(addressFrequency)
+      .filter(([_, count]) => count > 1)
+      .sort(([_, a], [__, b]) => b - a)
+      .slice(0, 5);
+    
+    // Create clusters
+    if (highFrequency.length > 0) {
+      clusters.push({
+        name: 'Frequent Interactions',
+        addresses: highFrequency.map(([addr]) => addr),
+        txCount: highFrequency.reduce((sum, [_, count]) => sum + count, 0)
+      });
+    }
+    
+    // Add exchange cluster if any
+    const exchangeAddresses = Object.keys(addressFrequency).filter(addr => 
+      addr.includes('exchange') || 
+      addr === 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4' || // Jupiter
+      addr === '38XnKP91qt1YWxNpbG6gJ8LYYv8xPSfftSJ9TgzRTU1W' // Binance
+    );
+    
+    if (exchangeAddresses.length > 0) {
+      clusters.push({
+        name: 'Exchange Activity',
+        addresses: exchangeAddresses,
+        txCount: exchangeAddresses.reduce((sum, addr) => sum + addressFrequency[addr], 0)
+      });
+    }
+    
+    // Add a NFT cluster if any
+    const nftAddresses = Object.keys(addressFrequency).filter(addr => 
+      addr === 'M2mx93ekt1fmXSVkTrUL9xVFHkmME8HTUi5Cyc5aF7K' || // Magic Eden
+      addr === 'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk' || // Tensor
+      addr === 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'    // Metaplex
+    );
+    
+    if (nftAddresses.length > 0) {
+      clusters.push({
+        name: 'NFT Activity',
+        addresses: nftAddresses,
+        txCount: nftAddresses.reduce((sum, addr) => sum + addressFrequency[addr], 0)
+      });
+    }
+    
+    return clusters;
+  }
 
   // Set up auto-refresh
   useEffect(() => {
@@ -142,7 +224,7 @@ export function useWalletData(address: string = '') {
         // Notify user about auto-refresh
         toast({
           title: "Auto-refresh enabled",
-          description: "Transaction data will update every 30 seconds",
+          description: "Transaction data will update every minute",
         });
       }
       
@@ -151,13 +233,10 @@ export function useWalletData(address: string = '') {
         clearInterval(pollingIntervalRef.current);
       }
       
-      // If too many errors, slow down the polling
-      const interval = errorCount > 5 ? 60000 : REFRESH_INTERVAL;
-      
       pollingIntervalRef.current = setInterval(() => {
         console.log("Auto-refreshing data...");
         refetch();
-      }, interval);
+      }, REFRESH_INTERVAL);
     }
     
     return () => {

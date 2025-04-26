@@ -1,14 +1,14 @@
 
 import { Connection, PublicKey, ParsedTransactionWithMeta } from '@solana/web3.js';
 
-// Updated Solana RPC endpoints
+// Updated Solana RPC endpoints with working public endpoints
 const RPC_ENDPOINTS = {
   MAINNET: 'https://api.mainnet-beta.solana.com',
   DEVNET: 'https://api.devnet.solana.com',
-  QUICKNODE: 'https://solana-mainnet.g.alchemy.com/v2/demo', // Public demo endpoint
-  GENESYSGO: 'https://ssc-dao.genesysgo.net', // Public endpoint
-  PUBLIC_RPC: 'https://api.mainnet-beta.solana.com', // Default public RPC
-  HELIUS_DEMO: 'https://rpc.helius.xyz/?api-key=1bd65ee3-0c4f-438f-9e8d-c3d47f436177' // Updated Helius endpoint
+  QUICKNODE: 'https://solana-mainnet.g.alchemy.com/v2/demo',
+  PUBLIC_RPC1: 'https://free.rpcpool.com',
+  PUBLIC_RPC2: 'https://api.mainnet-beta.solana.com',
+  HELIUS: 'https://mainnet.helius-rpc.com/?api-key=1bd65ee3-0c4f-438f-9e8d-c3d47f436177'
 };
 
 export class SolanaClient {
@@ -18,11 +18,12 @@ export class SolanaClient {
   constructor() {
     // Create multiple connections to different endpoints for redundancy
     this.connections = [
-      new Connection(RPC_ENDPOINTS.PUBLIC_RPC),
-      new Connection(RPC_ENDPOINTS.GENESYSGO),
+      new Connection(RPC_ENDPOINTS.PUBLIC_RPC1),
+      new Connection(RPC_ENDPOINTS.PUBLIC_RPC2),
       new Connection(RPC_ENDPOINTS.QUICKNODE),
-      new Connection(RPC_ENDPOINTS.HELIUS_DEMO)
+      new Connection(RPC_ENDPOINTS.HELIUS)
     ];
+    console.log('SolanaClient initialized with multiple RPC endpoints');
   }
 
   // Switch to next available connection
@@ -39,28 +40,35 @@ export class SolanaClient {
 
   async getBalance(address: string): Promise<number> {
     const pubkey = new PublicKey(address);
+    let lastError;
     
     // Try all connections until one works
-    for (let attempt = 0; attempt < this.connections.length; attempt++) {
+    for (let attempt = 0; attempt < this.connections.length * 2; attempt++) {
       try {
+        console.log(`Attempting to get balance using endpoint ${this.currentConnectionIndex}`);
         const balance = await this.connection.getBalance(pubkey);
+        console.log(`Balance retrieved successfully: ${balance / 10 ** 9} SOL`);
         return balance / 10 ** 9; // Convert lamports to SOL
       } catch (error) {
-        console.warn(`Error with connection ${this.currentConnectionIndex}, trying next one:`, error);
+        lastError = error;
+        console.warn(`Error with connection ${this.currentConnectionIndex}:`, error);
         this.switchConnection();
       }
     }
     
     // If all connections fail
+    console.error("Failed to get balance after trying all endpoints", lastError);
     throw new Error("Failed to get balance after trying all endpoints");
   }
 
   async getTransactions(address: string, limit = 20): Promise<ParsedTransactionWithMeta[]> {
     const pubkey = new PublicKey(address);
+    let lastError;
     
     // Try all connections until one works
-    for (let attempt = 0; attempt < this.connections.length; attempt++) {
+    for (let attempt = 0; attempt < this.connections.length * 2; attempt++) {
       try {
+        console.log(`Attempting to get transactions using endpoint ${this.currentConnectionIndex}`);
         const signatures = await this.connection.getSignaturesForAddress(pubkey, { limit });
         
         if (signatures.length === 0) {
@@ -79,31 +87,36 @@ export class SolanaClient {
         
         return validTransactions;
       } catch (error) {
-        console.warn(`Error with connection ${this.currentConnectionIndex}, trying next one:`, error);
+        lastError = error;
+        console.warn(`Error with connection ${this.currentConnectionIndex}:`, error);
         this.switchConnection();
       }
     }
     
     // If all connections fail
-    console.log("Failed to get transactions after trying all endpoints");
-    return [];
+    console.error("Failed to get transactions after trying all endpoints", lastError);
+    return []; // Return empty array instead of throwing to avoid breaking the UI
   }
 
   async getAccountInfo(address: string): Promise<any> {
     const pubkey = new PublicKey(address);
+    let lastError;
     
     // Try all connections until one works
-    for (let attempt = 0; attempt < this.connections.length; attempt++) {
+    for (let attempt = 0; attempt < this.connections.length * 2; attempt++) {
       try {
+        console.log(`Attempting to get account info using endpoint ${this.currentConnectionIndex}`);
         const accountInfo = await this.connection.getAccountInfo(pubkey);
         return accountInfo;
       } catch (error) {
-        console.warn(`Error with connection ${this.currentConnectionIndex}, trying next one:`, error);
+        lastError = error;
+        console.warn(`Error with connection ${this.currentConnectionIndex}:`, error);
         this.switchConnection();
       }
     }
     
     // If all connections fail
+    console.error("Failed to get account info after trying all endpoints", lastError);
     throw new Error("Failed to get account info after trying all endpoints");
   }
 }
