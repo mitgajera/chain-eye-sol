@@ -8,14 +8,28 @@ import { useWalletData } from "@/hooks/useWalletData";
 import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
 import { TransactionFlow } from "@/components/visualization/TransactionFlow";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 const WalletAnalysisPage = () => {
-  const { walletData, isLoading, analyzeWallet, walletAddress } = useWalletData();
+  const { walletData, isLoading, analyzeWallet, walletAddress, refetch } = useWalletData();
+
+  const handleRefresh = () => {
+    refetch();
+  };
 
   return (
     <MainLayout>
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-white">Wallet Analysis</h1>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+          <h1 className="text-3xl font-bold text-white mb-4 md:mb-0">Wallet Analysis</h1>
+          {walletAddress && (
+            <Button variant="outline" size="sm" onClick={handleRefresh} className="flex items-center gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Refresh Data
+            </Button>
+          )}
+        </div>
         
         <Card className="border-gray-800 bg-black/20 backdrop-blur-sm">
           <CardHeader>
@@ -36,14 +50,14 @@ const WalletAnalysisPage = () => {
                 <div>
                   <h3 className="text-lg font-medium text-white mb-4">Wallet Information</h3>
                   <div className="space-y-4">
-                    <div className="flex justify-between">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
                       <span className="text-gray-400">Address:</span>
-                      <span className="font-mono text-white">{walletAddress}</span>
+                      <span className="font-mono text-white break-all">{walletAddress}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-400">Balance:</span>
                       <span className="text-white">
-                        {isLoading ? "Loading..." : `${walletData?.balance.toFixed(4)} SOL`}
+                        {isLoading ? "Loading..." : `${walletData?.balance?.toFixed(4) || "0"} SOL`}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -51,7 +65,7 @@ const WalletAnalysisPage = () => {
                       <span className="text-white">
                         {isLoading 
                           ? "Loading..." 
-                          : walletData?.firstActivity && walletData.firstActivity.getTime() !== new Date().getTime()
+                          : walletData?.firstActivity
                               ? format(walletData.firstActivity, 'yyyy-MM-dd') 
                               : "N/A"
                         }
@@ -62,7 +76,7 @@ const WalletAnalysisPage = () => {
                       <span className="text-white">
                         {isLoading 
                           ? "Loading..." 
-                          : walletData?.lastActivity && walletData.lastActivity.getTime() !== 0
+                          : walletData?.lastActivity
                               ? format(walletData.lastActivity, 'yyyy-MM-dd') 
                               : "N/A"
                         }
@@ -91,7 +105,9 @@ const WalletAnalysisPage = () => {
                     <p className="text-sm text-gray-400">
                       {isLoading 
                         ? "Analyzing risk profile..."
-                        : "Low risk - This wallet shows typical behavior patterns with no concerning transactions."
+                        : walletData?.totalTransactions && walletData.totalTransactions > 0
+                          ? "Low risk - This wallet shows typical behavior patterns with no concerning transactions."
+                          : "Insufficient data - Not enough transactions to perform risk assessment."
                       }
                     </p>
                   </div>

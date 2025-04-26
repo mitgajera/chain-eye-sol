@@ -21,23 +21,42 @@ interface TransactionFlowData {
   edges: Edge[];
 }
 
-// Known exchanges and services for entity labeling
+// Expanded list of known entities for better labeling
 const knownEntities: Record<string, { name: string, type: string }> = {
-  // Some well-known Solana addresses
+  // System accounts
   '1nc1nerator11111111111111111111111111111111': { name: 'Incinerator', type: 'system' },
   'SysvarRent111111111111111111111111111111111': { name: 'Rent Sysvar', type: 'system' },
   'SysvarC1ock11111111111111111111111111111111': { name: 'Clock Sysvar', type: 'system' },
+  '11111111111111111111111111111111': { name: 'System Program', type: 'system' },
+  'Vote111111111111111111111111111111111111111': { name: 'Vote Program', type: 'system' },
+  'Stake11111111111111111111111111111111111111': { name: 'Stake Program', type: 'system' },
+  
+  // Token programs
   'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA': { name: 'Token Program', type: 'program' },
   'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL': { name: 'Associated Token Program', type: 'program' },
+  
+  // DEXes and Exchanges
   'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4': { name: 'Jupiter', type: 'exchange' },
   'DZjbn4XC8qoHKikZqzmhemykVzmossoayV9ffbsUqxVj': { name: 'Raydium', type: 'exchange' },
   'srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX': { name: 'Serum', type: 'exchange' },
   'MEisE1HzehtrDpAAT8PnLHjpSSkRYakotTuJRPjTpo8': { name: 'Mango Markets', type: 'exchange' },
   '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1': { name: 'Marinade', type: 'staking' },
-  '11111111111111111111111111111111': { name: 'System Program', type: 'system' },
+  'oRcY5eEJBDnBQ3Kzg1PBSxvG2hR3TAyPsKEcz9dnJHQ': { name: 'Orca', type: 'exchange' },
+  
+  // Major CEXes deposit addresses
+  '38XnKP91qt1YWxNpbG6gJ8LYYv8xPSfftSJ9TgzRTU1W': { name: 'Binance Hot Wallet', type: 'exchange' },
+  'StakeYvgbJ7T8iLX3GmJMUiKWqAdkM7EQgSKnwQEuSK9': { name: 'Lido', type: 'staking' },
+  
+  // NFT Marketplaces
+  'M2mx93ekt1fmXSVkTrUL9xVFHkmME8HTUi5Cyc5aF7K': { name: 'Magic Eden', type: 'marketplace' },
+  'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk': { name: 'Tensor', type: 'marketplace' },
+  
+  // Known protocols
+  'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s': { name: 'Metaplex', type: 'protocol' },
+  'wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb': { name: 'Wormhole', type: 'bridge' },
 };
 
-export function identifyEntityType(address: string): { name: string, type: 'source' | 'exchange' | 'destination' | 'intermediate' | 'system' | 'program' | 'staking' | 'unknown' } {
+export function identifyEntityType(address: string): { name: string, type: 'source' | 'exchange' | 'destination' | 'intermediate' | 'system' | 'program' | 'staking' | 'bridge' | 'marketplace' | 'protocol' | 'unknown' } {
   if (address in knownEntities) {
     return { 
       name: knownEntities[address].name, 
@@ -51,6 +70,21 @@ export function transactionsToFlowData(
   walletAddress: string,
   transactions: ParsedTransactionWithMeta[]
 ): TransactionFlowData {
+  // If no transactions, return basic structure
+  if (transactions.length === 0) {
+    return {
+      nodes: [
+        {
+          id: walletAddress,
+          label: shortenAddress(walletAddress),
+          value: 50,
+          type: 'source'
+        }
+      ],
+      edges: []
+    };
+  }
+
   const nodes = new Map<string, Node>();
   const edges = new Map<string, Edge>();
   const sourceWallet = walletAddress;
@@ -63,12 +97,22 @@ export function transactionsToFlowData(
     type: 'source'
   });
 
+  // Track unique accounts that interact with the wallet
+  const interactingAccounts = new Set<string>();
+
   transactions.forEach(tx => {
-    if (!tx.meta || tx.meta.err) return;
+    if (!tx.meta) return;
 
     const preBalances = tx.meta.preBalances;
     const postBalances = tx.meta.postBalances;
     const accountKeys = tx.transaction.message.accountKeys.map(key => key.pubkey.toString());
+    
+    // Track all accounts that are not the source wallet
+    accountKeys.forEach(address => {
+      if (address !== sourceWallet) {
+        interactingAccounts.add(address);
+      }
+    });
     
     // Only process transactions with at least 2 accounts
     if (accountKeys.length < 2) return;
@@ -89,13 +133,19 @@ export function transactionsToFlowData(
       
       // Add node if it doesn't exist
       if (!nodes.has(address)) {
+        let nodeType: 'source' | 'exchange' | 'destination' | 'intermediate' = 'destination';
+        
+        if (entity.type === 'exchange' || entity.type === 'marketplace') {
+          nodeType = 'exchange';
+        } else if (entity.type === 'system' || entity.type === 'program' || entity.type === 'protocol') {
+          nodeType = 'intermediate';
+        }
+        
         nodes.set(address, {
           id: address,
           label: entity.name,
           value: 30,
-          type: (entity.type === 'exchange' ? 'exchange' : 
-                entity.type === 'system' || entity.type === 'program' ? 'intermediate' : 
-                'destination')
+          type: nodeType
         });
       }
 
@@ -121,6 +171,37 @@ export function transactionsToFlowData(
       }
     });
   });
+  
+  // If we have no edges but have transactions, create some representation
+  if (edges.size === 0 && interactingAccounts.size > 0) {
+    // Add some of the interacting accounts as nodes
+    Array.from(interactingAccounts).slice(0, 5).forEach(address => {
+      const entity = identifyEntityType(address);
+      
+      let nodeType: 'source' | 'exchange' | 'destination' | 'intermediate' = 'destination';
+      if (entity.type === 'exchange' || entity.type === 'marketplace') {
+        nodeType = 'exchange';
+      } else if (entity.type === 'system' || entity.type === 'program' || entity.type === 'protocol') {
+        nodeType = 'intermediate';
+      }
+      
+      nodes.set(address, {
+        id: address,
+        label: entity.name,
+        value: 20,
+        type: nodeType
+      });
+      
+      // Create a minimal edge to show interaction
+      const edgeId = `${sourceWallet}-${address}`;
+      edges.set(edgeId, {
+        from: sourceWallet,
+        to: address,
+        value: 1,
+        label: 'Interaction'
+      });
+    });
+  }
 
   return {
     nodes: Array.from(nodes.values()),
@@ -139,9 +220,11 @@ export function processWalletActivity(transactions: ParsedTransactionWithMeta[])
   
   // Count transactions by month
   transactions.forEach(tx => {
-    const timestamp = tx.blockTime ? new Date(tx.blockTime * 1000) : new Date();
-    const month = months[timestamp.getMonth()];
-    monthlyActivity[month]++;
+    if (tx.blockTime) {
+      const timestamp = new Date(tx.blockTime * 1000);
+      const month = months[timestamp.getMonth()];
+      monthlyActivity[month]++;
+    }
   });
   
   // Convert to array format for chart
@@ -157,7 +240,12 @@ export function processFundingSources(transactions: ParsedTransactionWithMeta[])
     "Known Exchanges": 0,
     "Other Wallets": 0,
     "Mining/Staking": 0,
+    "NFT Marketplaces": 0
   };
+  
+  if (transactions.length === 0) {
+    return Object.entries(sources).map(([name, count]) => ({ name, value: 0 }));
+  }
   
   transactions.forEach(tx => {
     if (!tx.meta || tx.meta.err) return;
@@ -183,6 +271,10 @@ export function processFundingSources(transactions: ParsedTransactionWithMeta[])
         sources["Mining/Staking"] += 1;
         classified = true;
         break;
+      } else if (entity.type === 'marketplace') {
+        sources["NFT Marketplaces"] += 1;
+        classified = true;
+        break;
       }
     }
     
@@ -201,6 +293,10 @@ export function processFundingSources(transactions: ParsedTransactionWithMeta[])
 }
 
 export function processRecentTransactions(transactions: ParsedTransactionWithMeta[], walletAddress: string) {
+  if (transactions.length === 0) {
+    return [];
+  }
+  
   return transactions.slice(0, 5).map((tx, index) => {
     if (!tx.meta) {
       return {
@@ -239,17 +335,21 @@ export function processRecentTransactions(transactions: ParsedTransactionWithMet
       const walletIndex = accountKeys.findIndex(addr => addr === walletAddress);
       if (walletIndex !== -1) {
         const balChange = (tx.meta.postBalances[walletIndex] - tx.meta.preBalances[walletIndex]) / 10 ** 9;
-        amount = `${Math.abs(balChange).toFixed(2)} SOL`;
+        amount = `${Math.abs(balChange).toFixed(4)} SOL`;
       }
     }
     
     // Ensure status is one of the allowed values: "confirmed" | "pending" | "failed"
     const status: "confirmed" | "pending" | "failed" = tx.meta.err ? "failed" : "confirmed";
     
+    // Identify entity names for from/to fields
+    const senderEntity = identifyEntityType(sender);
+    const receiverEntity = identifyEntityType(receiver);
+    
     return {
       id: tx.transaction.signatures[0].substring(0, 8),
-      from: shortenAddress(sender),
-      to: shortenAddress(receiver),
+      from: senderEntity.name,
+      to: receiverEntity.name,
       amount,
       timestamp: tx.blockTime ? new Date(tx.blockTime * 1000).toISOString() : new Date().toISOString(),
       status,
@@ -257,4 +357,3 @@ export function processRecentTransactions(transactions: ParsedTransactionWithMet
     };
   });
 }
-
