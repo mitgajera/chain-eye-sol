@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { solanaClient } from '@/lib/solana';
 import { 
@@ -10,8 +10,21 @@ import {
 } from '@/lib/dataProcessing';
 import { toast } from '@/hooks/use-toast';
 
+// Set polling interval to 1 minute (60000 ms)
+const REFRESH_INTERVAL = 60000;
+
 export function useWalletData(address: string = '') {
   const [walletAddress, setWalletAddress] = useState<string>(address);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Clean up interval on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
 
   const { 
     data: walletData,
@@ -59,7 +72,8 @@ export function useWalletData(address: string = '') {
           recentTransactions: recentTxs,
           firstActivity,
           lastActivity,
-          totalTransactions: transactions.length
+          totalTransactions: transactions.length,
+          lastRefreshed: new Date()
         };
       } catch (err) {
         console.error("Error fetching wallet data:", err);
@@ -73,7 +87,38 @@ export function useWalletData(address: string = '') {
     },
     enabled: Boolean(walletAddress),
     retry: 1,
+    refetchInterval: REFRESH_INTERVAL, // Refetch data every minute
   });
+
+  // Set up auto-refresh
+  useEffect(() => {
+    if (walletAddress) {
+      // Initial fetch
+      refetch();
+      
+      // Notify user about auto-refresh
+      toast({
+        title: "Auto-refresh enabled",
+        description: "Transaction data will update every minute",
+      });
+      
+      // Set up polling for real-time updates
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+      
+      pollingIntervalRef.current = setInterval(() => {
+        refetch();
+      }, REFRESH_INTERVAL);
+    }
+    
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, [walletAddress, refetch]);
 
   const analyzeWallet = (address: string) => {
     setWalletAddress(address);
