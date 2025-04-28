@@ -22,7 +22,7 @@ export const knownEntities: Record<string, { name: string, type: string }> = {
   'DZjbn4XC8qoHKikZqzmhemykVzmossoayV9ffbsUqxVj': { name: 'Raydium', type: 'exchange' },
   'OrcaEKBSpx9uLArb5c8MeW8Ya3J4Qn9RVt5dVQ3HZ4R': { name: 'Orca Swap v1', type: 'exchange' },
   'srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX': { name: 'Serum', type: 'exchange' },
-  'MEisE1HzehtrDpAAT8PnLHjpSSkRYakotTuJRPjTpo8': { name: 'Mango Markets', type: 'exchange' },
+  // Remove the duplicate entry for MEisE1HzehtrDpAAT8PnLHjpSSkRYakotTuJRPjTpo8
   '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1': { name: 'Marinade', type: 'staking' },
   'oRcY5eEJBDnBQ3Kzg1PBSxvG2hR3TAyPsKEcz9dnJHQ': { name: 'Orca', type: 'exchange' },
   

@@ -6,7 +6,7 @@ interface Node {
   id: string;
   label: string;
   value: number;
-  type: 'source' | 'exchange' | 'destination' | 'intermediate';
+  type: string;
 }
 
 interface Edge {
@@ -45,7 +45,7 @@ const demoTransactionData: TransactionFlowData = {
 
 export function TransactionFlow({ data, isLoading = false }: TransactionFlowProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const flowData = data?.nodes.length ? data : demoTransactionData;
+  const flowData = data?.nodes?.length ? data : demoTransactionData;
 
   useEffect(() => {
     // In a real application, you would use a library like vis.js, cytoscape, or d3

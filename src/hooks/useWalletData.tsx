@@ -9,6 +9,7 @@ import {
   processRecentTransactions
 } from '@/lib/dataProcessing';
 import { toast } from '@/hooks/use-toast';
+import { knownEntities } from '@/lib/entityDatabase';
 
 // Reduce refresh interval to 30 seconds for faster updates
 const REFRESH_INTERVAL = 30000;
@@ -21,6 +22,34 @@ export type Transaction = {
   timestamp: string;
   status: "confirmed" | "pending" | "failed";
   type: "transfer" | "swap" | "deposit" | "withdrawal" | "unknown";
+};
+
+export type WalletDataType = {
+  address: string;
+  balance: number;
+  transactions: any[];
+  flowData: {
+    nodes: {
+      id: string;
+      label: string;
+      value: number;
+      type: string;
+    }[];
+    edges: {
+      from: string;
+      to: string;
+      value: number;
+      label: string;
+    }[];
+  };
+  activityData: { name: string, transactions: number }[];
+  fundingData: { name: string, value: number }[];
+  recentTransactions: Transaction[];
+  firstActivity: Date | null;
+  lastActivity: Date | null;
+  totalTransactions: number;
+  lastRefreshed: Date;
+  clusterData?: { name: string, addresses: string[], txCount: number }[];
 };
 
 export function useWalletData(address: string = '') {
@@ -71,7 +100,15 @@ export function useWalletData(address: string = '') {
             address: walletAddress,
             balance,
             transactions: [],
-            flowData: { nodes: [{ id: walletAddress, label: walletAddress.substring(0, 4) + '...' + walletAddress.substring(walletAddress.length - 4), value: 50, type: 'source' as const }], edges: [] },
+            flowData: { 
+              nodes: [{ 
+                id: walletAddress, 
+                label: walletAddress.substring(0, 4) + '...' + walletAddress.substring(walletAddress.length - 4), 
+                value: 50, 
+                type: 'source' 
+              }], 
+              edges: [] 
+            },
             activityData: [],
             fundingData: [],
             recentTransactions: [],
@@ -79,7 +116,7 @@ export function useWalletData(address: string = '') {
             lastActivity: null,
             totalTransactions: 0,
             lastRefreshed: new Date()
-          };
+          } as WalletDataType;
         }
         
         // Transform data for visualizations
@@ -124,7 +161,7 @@ export function useWalletData(address: string = '') {
           totalTransactions: transactions.length,
           lastRefreshed: new Date(),
           clusterData
-        };
+        } as WalletDataType;
       } catch (err) {
         // Increment error count
         setErrorCount(prev => prev + 1);
@@ -183,9 +220,8 @@ export function useWalletData(address: string = '') {
     
     // Add exchange cluster if any
     const exchangeAddresses = Object.keys(addressFrequency).filter(addr => 
-      addr.includes('exchange') || 
-      addr === 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4' || // Jupiter
-      addr === '38XnKP91qt1YWxNpbG6gJ8LYYv8xPSfftSJ9TgzRTU1W' // Binance
+      Object.keys(knownEntities).includes(addr) && 
+      knownEntities[addr]?.type === 'exchange'
     );
     
     if (exchangeAddresses.length > 0) {
@@ -198,9 +234,8 @@ export function useWalletData(address: string = '') {
     
     // Add a NFT cluster if any
     const nftAddresses = Object.keys(addressFrequency).filter(addr => 
-      addr === 'M2mx93ekt1fmXSVkTrUL9xVFHkmME8HTUi5Cyc5aF7K' || // Magic Eden
-      addr === 'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk' || // Tensor
-      addr === 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'    // Metaplex
+      Object.keys(knownEntities).includes(addr) && 
+      knownEntities[addr]?.type === 'marketplace'
     );
     
     if (nftAddresses.length > 0) {

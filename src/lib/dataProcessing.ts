@@ -1,6 +1,6 @@
-
 import { ParsedTransactionWithMeta } from '@solana/web3.js';
 import { shortenAddress } from './solana';
+import { knownEntities } from './entityDatabase';
 
 interface Node {
   id: string;
@@ -21,52 +21,26 @@ interface TransactionFlowData {
   edges: Edge[];
 }
 
-// Expanded list of known entities for better labeling
-const knownEntities: Record<string, { name: string, type: string }> = {
-  // System accounts
-  '1nc1nerator11111111111111111111111111111111': { name: 'Incinerator', type: 'system' },
-  'SysvarRent111111111111111111111111111111111': { name: 'Rent Sysvar', type: 'system' },
-  'SysvarC1ock11111111111111111111111111111111': { name: 'Clock Sysvar', type: 'system' },
-  '11111111111111111111111111111111': { name: 'System Program', type: 'system' },
-  'Vote111111111111111111111111111111111111111': { name: 'Vote Program', type: 'system' },
-  'Stake11111111111111111111111111111111111111': { name: 'Stake Program', type: 'system' },
-  
-  // Token programs
-  'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA': { name: 'Token Program', type: 'program' },
-  'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL': { name: 'Associated Token Program', type: 'program' },
-  
-  // DEXes and Exchanges
-  'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4': { name: 'Jupiter', type: 'exchange' },
-  'DZjbn4XC8qoHKikZqzmhemykVzmossoayV9ffbsUqxVj': { name: 'Raydium', type: 'exchange' },
-  'srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX': { name: 'Serum', type: 'exchange' },
-  'MEisE1HzehtrDpAAT8PnLHjpSSkRYakotTuJRPjTpo8': { name: 'Mango Markets', type: 'exchange' },
-  '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1': { name: 'Marinade', type: 'staking' },
-  'oRcY5eEJBDnBQ3Kzg1PBSxvG2hR3TAyPsKEcz9dnJHQ': { name: 'Orca', type: 'exchange' },
-  
-  // Major CEXes deposit addresses
-  '38XnKP91qt1YWxNpbG6gJ8LYYv8xPSfftSJ9TgzRTU1W': { name: 'Binance Hot Wallet', type: 'exchange' },
-  'StakeYvgbJ7T8iLX3GmJMUiKWqAdkM7EQgSKnwQEuSK9': { name: 'Lido', type: 'staking' },
-  '9hKpwEX9oTYYxdSQHJBgveHGHfxTKqXw3GSNGxWTZE1z': { name: 'Coinbase', type: 'exchange' },
-  'FTbiUmGeVGEwkGJZb665xcyn5JL5xKMWXYEYGpKx8JkU': { name: 'FTX', type: 'exchange' },
-  'CEzN7mqP9xoxn2LmHk3LYgf1Qxm8HqMehyTYqBYXUK3T': { name: 'Kraken', type: 'exchange' },
-  
-  // NFT Marketplaces
-  'M2mx93ekt1fmXSVkTrUL9xVFHkmME8HTUi5Cyc5aF7K': { name: 'Magic Eden', type: 'marketplace' },
-  'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk': { name: 'Tensor', type: 'marketplace' },
-  'CJsLwbP1iu5DuUikHEJnLfANgKy6stB2uFgvBBHoyxwz': { name: 'Solanart', type: 'marketplace' },
-  
-  // Known protocols
-  'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s': { name: 'Metaplex', type: 'protocol' },
-  'wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb': { name: 'Wormhole', type: 'bridge' },
-  'So1endDq2YkqhipRh3WViPa8hdiSpxWy6z3Z6tMCpAo': { name: 'Solend', type: 'defi' },
-  'Port7uDYB3wk6GJAw4KT1WpTeMtSu9bTcChBHkX2LfR': { name: 'Port Finance', type: 'defi' },
+// Type mapping for entity types to node types
+const entityTypeToNodeType: Record<string, 'source' | 'exchange' | 'destination' | 'intermediate'> = {
+  'exchange': 'exchange',
+  'marketplace': 'exchange', // Treat marketplaces as exchanges visually
+  'system': 'intermediate',
+  'program': 'intermediate',
+  'protocol': 'intermediate',
+  'staking': 'destination',
+  'bridge': 'intermediate',
+  'defi': 'destination',
+  'user': 'source',
+  'token': 'intermediate',
+  'unknown': 'destination'
 };
 
-export function identifyEntityType(address: string): { name: string, type: 'source' | 'exchange' | 'destination' | 'intermediate' | 'system' | 'program' | 'staking' | 'bridge' | 'marketplace' | 'protocol' | 'unknown' } {
+export function identifyEntityType(address: string): { name: string, type: string } {
   if (address in knownEntities) {
     return { 
       name: knownEntities[address].name, 
-      type: knownEntities[address].type as any 
+      type: knownEntities[address].type
     };
   }
   return { name: shortenAddress(address), type: 'unknown' };
@@ -139,13 +113,8 @@ export function transactionsToFlowData(
       
       // Add node if it doesn't exist
       if (!nodes.has(address)) {
-        let nodeType: 'source' | 'exchange' | 'destination' | 'intermediate' = 'destination';
-        
-        if (entity.type === 'exchange' || entity.type === 'marketplace') {
-          nodeType = 'exchange';
-        } else if (entity.type === 'system' || entity.type === 'program' || entity.type === 'protocol') {
-          nodeType = 'intermediate';
-        }
+        // Map entity type to node type using the mapping
+        const nodeType = entityTypeToNodeType[entity.type] || 'destination';
         
         nodes.set(address, {
           id: address,
@@ -184,12 +153,8 @@ export function transactionsToFlowData(
     Array.from(interactingAccounts).slice(0, 5).forEach(address => {
       const entity = identifyEntityType(address);
       
-      let nodeType: 'source' | 'exchange' | 'destination' | 'intermediate' = 'destination';
-      if (entity.type === 'exchange' || entity.type === 'marketplace') {
-        nodeType = 'exchange';
-      } else if (entity.type === 'system' || entity.type === 'program' || entity.type === 'protocol') {
-        nodeType = 'intermediate';
-      }
+      // Map entity type to node type using the mapping
+      const nodeType = entityTypeToNodeType[entity.type] || 'destination';
       
       nodes.set(address, {
         id: address,
