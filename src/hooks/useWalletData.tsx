@@ -10,8 +10,8 @@ import {
 } from '@/lib/dataProcessing';
 import { toast } from '@/hooks/use-toast';
 
-// Set refresh interval to exactly 1 minute (60000ms)
-const REFRESH_INTERVAL = 60000;
+// Reduce refresh interval to 30 seconds for faster updates
+const REFRESH_INTERVAL = 30000;
 
 export type Transaction = {
   id: string;
@@ -27,6 +27,7 @@ export function useWalletData(address: string = '') {
   const [walletAddress, setWalletAddress] = useState<string>(address);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [errorCount, setErrorCount] = useState(0);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Clean up interval on unmount
   useEffect(() => {
@@ -44,7 +45,7 @@ export function useWalletData(address: string = '') {
     error,
     refetch
   } = useQuery({
-    queryKey: ['walletData', walletAddress],
+    queryKey: ['walletData', walletAddress, retryCount],
     queryFn: async () => {
       if (!walletAddress) return null;
       
@@ -139,9 +140,9 @@ export function useWalletData(address: string = '') {
       }
     },
     enabled: Boolean(walletAddress),
-    retry: 2,
+    retry: 3,
     retryDelay: attempt => Math.min(1000 * 2 ** attempt, 30000), // Exponential backoff
-    refetchInterval: REFRESH_INTERVAL, // Refetch data every 1 minute
+    refetchInterval: REFRESH_INTERVAL, // Refetch data every 30 seconds
     refetchIntervalInBackground: false,
   });
 
@@ -224,7 +225,7 @@ export function useWalletData(address: string = '') {
         // Notify user about auto-refresh
         toast({
           title: "Auto-refresh enabled",
-          description: "Transaction data will update every minute",
+          description: "Transaction data will update every 30 seconds",
         });
       }
       
@@ -251,13 +252,23 @@ export function useWalletData(address: string = '') {
     setWalletAddress(address);
   };
 
+  // Manual refresh function with retry counter to force a refetch
+  const forceRefresh = () => {
+    setRetryCount(prev => prev + 1);
+    refetch();
+    toast({
+      title: "Refreshing data",
+      description: "Fetching latest wallet information...",
+    });
+  };
+
   return {
     walletData,
     isLoading,
     isError,
     error,
     analyzeWallet,
-    refetch,
+    refetch: forceRefresh,
     walletAddress
   };
 }

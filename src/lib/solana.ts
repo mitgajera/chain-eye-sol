@@ -1,14 +1,14 @@
 
 import { Connection, PublicKey, ParsedTransactionWithMeta } from '@solana/web3.js';
 
-// Updated Solana RPC endpoints with working public endpoints
+// Updated Solana RPC endpoints with public endpoints that don't require API keys
 const RPC_ENDPOINTS = {
   MAINNET: 'https://api.mainnet-beta.solana.com',
   DEVNET: 'https://api.devnet.solana.com',
-  QUICKNODE: 'https://solana-mainnet.g.alchemy.com/v2/demo',
-  PUBLIC_RPC1: 'https://free.rpcpool.com',
-  PUBLIC_RPC2: 'https://api.mainnet-beta.solana.com',
-  HELIUS: 'https://mainnet.helius-rpc.com/?api-key=1bd65ee3-0c4f-438f-9e8d-c3d47f436177'
+  QUICKNODE: 'https://solana-mainnet.quicknode.com/free-rpc',
+  PUBLIC_RPC1: 'https://solana-api.projectserum.com',
+  PUBLIC_RPC2: 'https://rpc.ankr.com/solana',
+  HELIUS_DEMO: 'https://rpc.helius.xyz/?api-key=b7047c5c-63d6-4ea0-b9f9-159fa33c79ff' // Demo API key for testing
 };
 
 export class SolanaClient {
@@ -18,10 +18,11 @@ export class SolanaClient {
   constructor() {
     // Create multiple connections to different endpoints for redundancy
     this.connections = [
-      new Connection(RPC_ENDPOINTS.PUBLIC_RPC1),
-      new Connection(RPC_ENDPOINTS.PUBLIC_RPC2),
-      new Connection(RPC_ENDPOINTS.QUICKNODE),
-      new Connection(RPC_ENDPOINTS.HELIUS)
+      new Connection(RPC_ENDPOINTS.MAINNET, { commitment: 'confirmed' }),
+      new Connection(RPC_ENDPOINTS.PUBLIC_RPC1, { commitment: 'confirmed' }),
+      new Connection(RPC_ENDPOINTS.PUBLIC_RPC2, { commitment: 'confirmed' }),
+      new Connection(RPC_ENDPOINTS.HELIUS_DEMO, { commitment: 'confirmed' }),
+      new Connection(RPC_ENDPOINTS.QUICKNODE, { commitment: 'confirmed' })
     ];
     console.log('SolanaClient initialized with multiple RPC endpoints');
   }
@@ -69,6 +70,8 @@ export class SolanaClient {
     for (let attempt = 0; attempt < this.connections.length * 2; attempt++) {
       try {
         console.log(`Attempting to get transactions using endpoint ${this.currentConnectionIndex}`);
+        
+        // Try to get signatures first
         const signatures = await this.connection.getSignaturesForAddress(pubkey, { limit });
         
         if (signatures.length === 0) {
@@ -78,8 +81,11 @@ export class SolanaClient {
 
         console.log(`Found ${signatures.length} transaction signatures`);
         
+        // Then get full transactions with parsed data
         const transactions = await Promise.all(
-          signatures.map(sig => this.connection.getParsedTransaction(sig.signature, { maxSupportedTransactionVersion: 0 }))
+          signatures.map(sig => 
+            this.connection.getParsedTransaction(sig.signature, { maxSupportedTransactionVersion: 0 })
+          )
         );
         
         const validTransactions = transactions.filter((tx): tx is ParsedTransactionWithMeta => tx !== null);

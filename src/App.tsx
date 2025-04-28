@@ -12,11 +12,14 @@ import EntityLabelingPage from "./pages/EntityLabelingPage";
 import SettingsPage from "./pages/SettingsPage"; 
 import NotFound from "./pages/NotFound";
 
+// Configure QueryClient with better error handling
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
-      refetchOnWindowFocus: false
+      retry: 3, // Increase retry attempts
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000), // Exponential backoff with a cap
+      refetchOnWindowFocus: false,
+      staleTime: 60000, // Data is fresh for 1 minute
     },
   },
 });
