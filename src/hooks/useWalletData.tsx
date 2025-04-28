@@ -13,6 +13,7 @@ import { knownEntities } from '@/lib/entityDatabase';
 
 // Reduce refresh interval to 30 seconds for faster updates
 const REFRESH_INTERVAL = 30000;
+const MAX_RETRY_ATTEMPTS = 2;
 
 export type Transaction = {
   id: string;
@@ -173,14 +174,28 @@ export function useWalletData(address: string = '') {
           variant: "destructive"
         });
         
+        // If we've had multiple errors, try to use mock data
+        if (errorCount >= 2) {
+          solanaClient.enableMockData();
+          toast({
+            title: "Using demonstration data",
+            description: "Unable to connect to Solana network. Using demo data instead.",
+          });
+          
+          // Try again with mock data
+          return refetch();
+        }
+        
         throw err;
       }
     },
     enabled: Boolean(walletAddress),
-    retry: 3,
+    retry: MAX_RETRY_ATTEMPTS,
     retryDelay: attempt => Math.min(1000 * 2 ** attempt, 30000), // Exponential backoff
     refetchInterval: REFRESH_INTERVAL, // Refetch data every 30 seconds
     refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false, // Disable refetch on window focus to prevent too many requests
+    staleTime: REFRESH_INTERVAL / 2, // Consider data stale after half the refresh interval
   });
 
   // Helper function to create clusters from transactions
@@ -285,6 +300,8 @@ export function useWalletData(address: string = '') {
 
   const analyzeWallet = (address: string) => {
     setWalletAddress(address);
+    // Reset error count when analyzing a new wallet
+    setErrorCount(0);
   };
 
   // Manual refresh function with retry counter to force a refetch

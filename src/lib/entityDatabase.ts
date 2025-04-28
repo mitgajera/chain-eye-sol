@@ -22,8 +22,8 @@ export const knownEntities: Record<string, { name: string, type: string }> = {
   'DZjbn4XC8qoHKikZqzmhemykVzmossoayV9ffbsUqxVj': { name: 'Raydium', type: 'exchange' },
   'OrcaEKBSpx9uLArb5c8MeW8Ya3J4Qn9RVt5dVQ3HZ4R': { name: 'Orca Swap v1', type: 'exchange' },
   'srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX': { name: 'Serum', type: 'exchange' },
-  // Remove the duplicate entry for MEisE1HzehtrDpAAT8PnLHjpSSkRYakotTuJRPjTpo8
   '5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1': { name: 'Marinade', type: 'staking' },
+  'MEisE1HzehtrDpAAT8PnLHjpSSkRYakotTuJRPjTpo8': { name: 'Magic Eden v2', type: 'marketplace' },
   'oRcY5eEJBDnBQ3Kzg1PBSxvG2hR3TAyPsKEcz9dnJHQ': { name: 'Orca', type: 'exchange' },
   
   // Major CEXes deposit addresses
@@ -39,7 +39,6 @@ export const knownEntities: Record<string, { name: string, type: string }> = {
   
   // NFT Marketplaces
   'M2mx93ekt1fmXSVkTrUL9xVFHkmME8HTUi5Cyc5aF7K': { name: 'Magic Eden', type: 'marketplace' },
-  'MEisE1HzehtrDpAAT8PnLHjpSSkRYakotTuJRPjTpo8': { name: 'Magic Eden v2', type: 'marketplace' },
   'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk': { name: 'Tensor', type: 'marketplace' },
   'TSWAPaqyCSx2KABk68Shruf4rp7CxcNi8hAsbdwmHbN': { name: 'Tensor Swap', type: 'marketplace' },
   'CJsLwbP1iu5DuUikHEJnLfANgKy6stB2uFgvBBHoyxwz': { name: 'Solanart', type: 'marketplace' },

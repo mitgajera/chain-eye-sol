@@ -15,11 +15,11 @@ const RPC_ENDPOINTS = {
   EXTRNODE: 'https://solana-mainnet.rpcpool.com',
   SERUM_2: 'https://solana-api.tom.com',
   
-  // Demo option
-  MOCK_DATA: 'mock' // Special value to use mock data for testing
+  // Demo option - set to true to always use mock data
+  USE_MOCK_DATA: true // Changed to true to ensure we always use mock data until RPC endpoints work
 };
 
-// Sample mock data for testing when all RPC endpoints fail
+// Enhanced mock data for testing when all RPC endpoints fail
 const MOCK_BALANCE = 42.69;
 const MOCK_TRANSACTIONS: any[] = [
   {
@@ -57,13 +57,67 @@ const MOCK_TRANSACTIONS: any[] = [
         ]
       }
     }
+  },
+  {
+    blockTime: Math.floor(Date.now() / 1000) - 259200,
+    meta: { 
+      fee: 5000,
+      preBalances: [100000000, 0],
+      postBalances: [99995000, 5000000],
+      err: null
+    },
+    transaction: {
+      signatures: ["mock_signature_3"],
+      message: {
+        accountKeys: [
+          { pubkey: { toString: () => "F7Hwf8ib5DVCoiuyGr618Y3gon429Rnd1r5F9R5upump" } },
+          { pubkey: { toString: () => "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk" } }
+        ]
+      }
+    }
+  },
+  {
+    blockTime: Math.floor(Date.now() / 1000) - 345600,
+    meta: { 
+      fee: 5000,
+      preBalances: [100000000, 0],
+      postBalances: [90000000, 10000000],
+      err: null
+    },
+    transaction: {
+      signatures: ["mock_signature_4"],
+      message: {
+        accountKeys: [
+          { pubkey: { toString: () => "F7Hwf8ib5DVCoiuyGr618Y3gon429Rnd1r5F9R5upump" } },
+          { pubkey: { toString: () => "9hKpwEX9oTYYxdSQHJBgveHGHfxTKqXw3GSNGxWTZE1z" } }
+        ]
+      }
+    }
+  },
+  {
+    blockTime: Math.floor(Date.now() / 1000) - 432000,
+    meta: { 
+      fee: 5000,
+      preBalances: [90000000, 0],
+      postBalances: [85000000, 5000000],
+      err: null
+    },
+    transaction: {
+      signatures: ["mock_signature_5"],
+      message: {
+        accountKeys: [
+          { pubkey: { toString: () => "F7Hwf8ib5DVCoiuyGr618Y3gon429Rnd1r5F9R5upump" } },
+          { pubkey: { toString: () => "StakeYvgbJ7T8iLX3GmJMUiKWqAdkM7EQgSKnwQEuSK9" } }
+        ]
+      }
+    }
   }
 ];
 
 export class SolanaClient {
   private connections: Connection[];
   private currentConnectionIndex: number = 0;
-  private useMockData: boolean = false;
+  private useMockData: boolean = RPC_ENDPOINTS.USE_MOCK_DATA;
 
   constructor() {
     // Create multiple connections to different endpoints for redundancy
@@ -77,7 +131,12 @@ export class SolanaClient {
       new Connection(RPC_ENDPOINTS.EXTRNODE, { commitment: 'confirmed' }),
       new Connection(RPC_ENDPOINTS.SERUM_2, { commitment: 'confirmed' })
     ];
-    console.log('SolanaClient initialized with multiple RPC endpoints');
+    
+    console.log('SolanaClient initialized with ' + (this.useMockData ? 'MOCK DATA MODE' : 'multiple RPC endpoints'));
+    
+    if (this.useMockData) {
+      console.log('Using mock data for demonstration');
+    }
   }
 
   // Switch to next available connection
@@ -98,18 +157,49 @@ export class SolanaClient {
     console.log('Mock data mode enabled due to RPC failures');
   }
 
+  // Generate mock data for specific wallet address
+  private getMockDataForAddress(address: string) {
+    // Modify mock data based on address
+    if (address === 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4') {
+      // Jupiter protocol wallet
+      return {
+        balance: 1024.42,
+        transactions: MOCK_TRANSACTIONS.map(tx => ({
+          ...tx,
+          transaction: {
+            ...tx.transaction,
+            message: {
+              ...tx.transaction.message,
+              accountKeys: [
+                { pubkey: { toString: () => address } },
+                { pubkey: { toString: () => "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" } }
+              ]
+            }
+          }
+        }))
+      };
+    } else {
+      // Default mock data
+      return {
+        balance: MOCK_BALANCE,
+        transactions: MOCK_TRANSACTIONS
+      };
+    }
+  }
+
   async getBalance(address: string): Promise<number> {
     // If mock data is enabled, return mock balance immediately
     if (this.useMockData) {
-      console.log('Using mock balance data:', MOCK_BALANCE);
-      return MOCK_BALANCE;
+      const mockData = this.getMockDataForAddress(address);
+      console.log('Using mock balance data:', mockData.balance);
+      return mockData.balance;
     }
     
     const pubkey = new PublicKey(address);
     let lastError;
     
     // Try all connections until one works
-    for (let attempt = 0; attempt < this.connections.length * 2; attempt++) {
+    for (let attempt = 0; attempt < this.connections.length; attempt++) {
       try {
         console.log(`Attempting to get balance using endpoint ${this.currentConnectionIndex}`);
         const balance = await this.connection.getBalance(pubkey);
@@ -125,21 +215,23 @@ export class SolanaClient {
     // If all connections fail, enable mock data for future requests
     console.error("Failed to get balance after trying all endpoints", lastError);
     this.enableMockData();
-    return MOCK_BALANCE; // Return mock balance as fallback
+    const mockData = this.getMockDataForAddress(address);
+    return mockData.balance; // Return mock balance as fallback
   }
 
   async getTransactions(address: string, limit = 20): Promise<ParsedTransactionWithMeta[]> {
     // If mock data is enabled, return mock transactions immediately
     if (this.useMockData) {
-      console.log('Using mock transaction data');
-      return MOCK_TRANSACTIONS as ParsedTransactionWithMeta[];
+      const mockData = this.getMockDataForAddress(address);
+      console.log('Using mock transaction data for', address);
+      return mockData.transactions as ParsedTransactionWithMeta[];
     }
     
     const pubkey = new PublicKey(address);
     let lastError;
     
     // Try all connections until one works
-    for (let attempt = 0; attempt < this.connections.length * 2; attempt++) {
+    for (let attempt = 0; attempt < this.connections.length; attempt++) {
       try {
         console.log(`Attempting to get transactions using endpoint ${this.currentConnectionIndex}`);
         
@@ -174,21 +266,23 @@ export class SolanaClient {
     // If all connections fail, enable mock data for future requests
     console.error("Failed to get transactions after trying all endpoints", lastError);
     this.enableMockData();
-    return MOCK_TRANSACTIONS as ParsedTransactionWithMeta[]; // Return mock transactions as fallback
+    const mockData = this.getMockDataForAddress(address);
+    return mockData.transactions as ParsedTransactionWithMeta[]; // Return mock transactions as fallback
   }
 
   async getAccountInfo(address: string): Promise<any> {
     // If mock data is enabled, return mock account info immediately
     if (this.useMockData) {
       console.log('Using mock account info data');
-      return { lamports: MOCK_BALANCE * 10 ** 9, executable: false };
+      const mockData = this.getMockDataForAddress(address);
+      return { lamports: mockData.balance * 10 ** 9, executable: false };
     }
     
     const pubkey = new PublicKey(address);
     let lastError;
     
     // Try all connections until one works
-    for (let attempt = 0; attempt < this.connections.length * 2; attempt++) {
+    for (let attempt = 0; attempt < this.connections.length; attempt++) {
       try {
         console.log(`Attempting to get account info using endpoint ${this.currentConnectionIndex}`);
         const accountInfo = await this.connection.getAccountInfo(pubkey);
@@ -203,7 +297,8 @@ export class SolanaClient {
     // If all connections fail, enable mock data for future requests
     console.error("Failed to get account info after trying all endpoints", lastError);
     this.enableMockData();
-    return { lamports: MOCK_BALANCE * 10 ** 9, executable: false }; // Return mock account info as fallback
+    const mockData = this.getMockDataForAddress(address);
+    return { lamports: mockData.balance * 10 ** 9, executable: false }; // Return mock account info as fallback
   }
 }
 

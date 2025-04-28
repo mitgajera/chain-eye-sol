@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { isValidSolanaAddress } from '@/lib/solana';
-import { SearchIcon } from 'lucide-react';
+import { SearchIcon, Loader2 } from 'lucide-react';
 
 interface WalletSearchProps {
   onSearch: (address: string) => void;
@@ -55,8 +55,8 @@ export function WalletSearch({ onSearch, isLoading = false }: WalletSearchProps)
         className="bg-solana-purple hover:bg-solana-purple/90"
       >
         {isLoading ? (
-          <div className="flex items-center">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+          <div className="flex items-center space-x-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
             <span>Analyzing...</span>
           </div>
         ) : (
