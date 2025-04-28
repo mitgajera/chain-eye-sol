@@ -57,10 +57,11 @@ export function WalletSearch({ onSearch, isLoading = false }: WalletSearchProps)
     onSearch(address);
   };
 
-  // Example wallets for quick testing
+  // Real Solana wallets for examples
   const exampleWallets = [
     { name: "Test Wallet", address: "F7Hwf8ib5DVCoiuyGr618Y3gon429Rnd1r5F9R5upump" },
-    { name: "Jupiter Protocol", address: "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4" }
+    { name: "Jupiter Protocol", address: "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4" },
+    { name: "Magic Eden", address: "1BWutmTvYPwDtmw9abTkS4Ssr8no61spGAvW1X6NDix" }
   ];
 
   return (

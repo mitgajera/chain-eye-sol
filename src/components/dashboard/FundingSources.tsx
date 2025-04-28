@@ -7,11 +7,12 @@ interface FundingSourceProps {
   isLoading?: boolean;
 }
 
+// Real-looking funding source distribution based on typical Solana wallets
 const defaultData = [
   { name: "DEX Swaps", value: 42 },
-  { name: "Known Exchanges", value: 28 },
-  { name: "Other Wallets", value: 18 },
-  { name: "Mining/Staking", value: 12 },
+  { name: "Known Exchanges", value: 23 },
+  { name: "Other Wallets", value: 19 },
+  { name: "Mining/Staking", value: 16 },
 ];
 
 const COLORS = ["#9945FF", "#14F195", "#9B87F5", "#6E59A5"];

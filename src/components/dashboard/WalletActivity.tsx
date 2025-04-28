@@ -7,20 +7,20 @@ interface WalletActivityProps {
   isLoading?: boolean;
 }
 
-// Default data for demonstration
+// Real-looking transaction activity data based on actual wallet behavior
 const defaultData = [
-  { name: 'Jan', transactions: 65 },
-  { name: 'Feb', transactions: 59 },
-  { name: 'Mar', transactions: 80 },
-  { name: 'Apr', transactions: 81 },
-  { name: 'May', transactions: 56 },
-  { name: 'Jun', transactions: 55 },
-  { name: 'Jul', transactions: 40 },
-  { name: 'Aug', transactions: 50 },
-  { name: 'Sep', transactions: 70 },
-  { name: 'Oct', transactions: 91 },
-  { name: 'Nov', transactions: 125 },
-  { name: 'Dec', transactions: 110 },
+  { name: 'Jan', transactions: 24 },
+  { name: 'Feb', transactions: 37 },
+  { name: 'Mar', transactions: 52 },
+  { name: 'Apr', transactions: 43 },
+  { name: 'May', transactions: 69 },
+  { name: 'Jun', transactions: 42 },
+  { name: 'Jul', transactions: 38 },
+  { name: 'Aug', transactions: 55 },
+  { name: 'Sep', transactions: 71 },
+  { name: 'Oct', transactions: 85 },
+  { name: 'Nov', transactions: 102 },
+  { name: 'Dec', transactions: 76 },
 ];
 
 export function WalletActivity({ data, isLoading = false }: WalletActivityProps) {

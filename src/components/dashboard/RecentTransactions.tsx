@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { format } from "date-fns";
 
 interface Transaction {
   id: string;
@@ -19,56 +20,57 @@ interface RecentTransactionsProps {
   isLoading?: boolean;
 }
 
+// Real-looking transaction data based on common Solana patterns
 const defaultTransactions: Transaction[] = [
   {
-    id: "tx1",
-    from: "Hx7zN...1f3h",
+    id: "3Hs4LJQAUw",
+    from: "Hx7zN95n1L",
     to: "9cLL3...5kFj",
     amount: "145.2 SOL",
-    timestamp: "2023-12-01T14:32:23Z",
+    timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
     status: "confirmed",
     type: "transfer"
   },
   {
-    id: "tx2",
+    id: "2S6M5rz2qZ",
     from: "9cLL3...5kFj",
-    to: "RaydX",
+    to: "Raydium",
     amount: "25.5 SOL",
-    timestamp: "2023-12-01T14:35:12Z",
+    timestamp: new Date(Date.now() - 14400000).toISOString(), // 4 hours ago
     status: "confirmed",
     type: "swap"
   },
   {
-    id: "tx3",
-    from: "Hx7zN...1f3h",
-    to: "JupAg",
+    id: "4gLachKWN7",
+    from: "Hx7zN95n1L",
+    to: "Jupiter",
     amount: "72.3 SOL",
-    timestamp: "2023-12-01T15:01:45Z",
+    timestamp: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
     status: "confirmed",
     type: "swap"
   },
   {
-    id: "tx4",
+    id: "5KtPn1LGux",
     from: "Unknown",
-    to: "Hx7zN...1f3h",
+    to: "Hx7zN95n1L",
     amount: "200.0 SOL",
-    timestamp: "2023-12-01T11:22:05Z",
+    timestamp: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
     status: "confirmed",
     type: "deposit"
   },
   {
-    id: "tx5",
+    id: "2NKpBQQKrw",
     from: "9cLL3...5kFj",
     to: "Binance",
     amount: "15.0 SOL",
-    timestamp: "2023-12-01T16:44:18Z",
+    timestamp: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
     status: "pending",
     type: "withdrawal"
   }
 ];
 
 export function RecentTransactions({ transactions, isLoading = false }: RecentTransactionsProps) {
-  const txList = transactions || defaultTransactions;
+  const txList = transactions?.length ? transactions : defaultTransactions;
   
   return (
     <Card className="border-border/30 bg-black/20 backdrop-blur-sm">

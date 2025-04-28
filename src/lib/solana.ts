@@ -1,4 +1,3 @@
-
 import { Connection, PublicKey, ParsedTransactionWithMeta } from '@solana/web3.js';
 
 // Updated Solana RPC endpoints with public endpoints and fallbacks
@@ -16,98 +15,192 @@ const RPC_ENDPOINTS = {
   SERUM_2: 'https://solana-api.tom.com',
   
   // Demo option - set to true to always use mock data
-  USE_MOCK_DATA: true // Changed to true to ensure we always use mock data until RPC endpoints work
+  USE_MOCK_DATA: true // Using mock data until RPC endpoints work
 };
 
-// Enhanced mock data for testing when all RPC endpoints fail
-const MOCK_BALANCE = 42.69;
+// Enhanced real-looking mock data based on actual Solana transactions
+const MOCK_BALANCE = 258.47;
 const MOCK_TRANSACTIONS: any[] = [
   {
-    blockTime: Math.floor(Date.now() / 1000) - 86400,
+    blockTime: Math.floor(Date.now() / 1000) - 3600, // 1 hour ago
     meta: { 
       fee: 5000,
-      preBalances: [100000000, 50000000],
-      postBalances: [99995000, 50000000],
+      preBalances: [12580000000, 50000000],
+      postBalances: [12420000000, 200000000],
       err: null
     },
     transaction: {
-      signatures: ["mock_signature_1"],
+      signatures: ["3Hs4LJQAUwDSEpjnF2MdR5H1xPMZMjUKrHyK9hD6QYT2QJgM6CHqfBs9dgFJQg97S6aLWUAUnCqSBGqKrSzDcvxe"],
       message: {
         accountKeys: [
-          { pubkey: { toString: () => "F7Hwf8ib5DVCoiuyGr618Y3gon429Rnd1r5F9R5upump" } },
-          { pubkey: { toString: () => "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4" } }
+          { pubkey: { toString: () => "Hx7zN95n1LHQwB7cCh4j8QZwJGq11iewG1Xx9S1f3h" } },
+          { pubkey: { toString: () => "9cLL3BnbhCYvPJM33B5kFJ4Uxgcc81rMVLgo5p7zZFj" } }
         ]
       }
     }
   },
   {
-    blockTime: Math.floor(Date.now() / 1000) - 172800,
+    blockTime: Math.floor(Date.now() / 1000) - 14400, // 4 hours ago
     meta: { 
       fee: 5000,
-      preBalances: [100000000, 0],
-      postBalances: [99995000, 5000000],
+      preBalances: [12420000000, 10000000],
+      postBalances: [12394500000, 20000000],
       err: null
     },
     transaction: {
-      signatures: ["mock_signature_2"],
+      signatures: ["2S6M5rz2qZpPZQAvw9p9TgLcTJkMFy5GrXDmrxiMK6rKw3p6jhLPvJr3bCYSxH71eMf6rnxtNprXfNK7JYJRN1WL"],
       message: {
         accountKeys: [
-          { pubkey: { toString: () => "F7Hwf8ib5DVCoiuyGr618Y3gon429Rnd1r5F9R5upump" } },
-          { pubkey: { toString: () => "M2mx93ekt1fmXSVkTrUL9xVFHkmME8HTUi5Cyc5aF7K" } }
+          { pubkey: { toString: () => "9cLL3BnbhCYvPJM33B5kFJ4Uxgcc81rMVLgo5p7zZFj" } },
+          { pubkey: { toString: () => "rD4Fx4WaRnTZQLTSXJCqZ9hmx8MhKJA4DQBirM5K4JJ" } } // RaydiumSwap
         ]
       }
     }
   },
   {
-    blockTime: Math.floor(Date.now() / 1000) - 259200,
+    blockTime: Math.floor(Date.now() / 1000) - 86400, // 1 day ago
     meta: { 
       fee: 5000,
-      preBalances: [100000000, 0],
-      postBalances: [99995000, 5000000],
+      preBalances: [12580000000, 0],
+      postBalances: [12507700000, 5000000],
       err: null
     },
     transaction: {
-      signatures: ["mock_signature_3"],
+      signatures: ["4gLachKWN7JGgPYiVjw5ARTZpLpfWMFVTu1gZxp5bjDc8c4mrcWyWgA6f4f1U1LNBQUFQnFnUQmgAUTSuRZzoNrD"],
       message: {
         accountKeys: [
-          { pubkey: { toString: () => "F7Hwf8ib5DVCoiuyGr618Y3gon429Rnd1r5F9R5upump" } },
-          { pubkey: { toString: () => "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk" } }
+          { pubkey: { toString: () => "Hx7zN95n1LHQwB7cCh4j8QZwJGq11iewG1Xx9S1f3h" } },
+          { pubkey: { toString: () => "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN" } } // Jupiter
         ]
       }
     }
   },
   {
-    blockTime: Math.floor(Date.now() / 1000) - 345600,
+    blockTime: Math.floor(Date.now() / 1000) - 172800, // 2 days ago
     meta: { 
       fee: 5000,
-      preBalances: [100000000, 0],
-      postBalances: [90000000, 10000000],
+      preBalances: [12300000000, 0],
+      postBalances: [12500000000, 5000000],
       err: null
     },
     transaction: {
-      signatures: ["mock_signature_4"],
+      signatures: ["5KtPn1LGuxhFgGgVnAZBQkEZ9LJ9Z1xc8Burgd5p28Vtj9J5KvzJzNBeMPJQxEm3UPV5YPqcMdrjVF4GcdYbG5F9"],
       message: {
         accountKeys: [
-          { pubkey: { toString: () => "F7Hwf8ib5DVCoiuyGr618Y3gon429Rnd1r5F9R5upump" } },
-          { pubkey: { toString: () => "9hKpwEX9oTYYxdSQHJBgveHGHfxTKqXw3GSNGxWTZE1z" } }
+          { pubkey: { toString: () => "Unknown" } },
+          { pubkey: { toString: () => "Hx7zN95n1LHQwB7cCh4j8QZwJGq11iewG1Xx9S1f3h" } }
         ]
       }
     }
   },
   {
-    blockTime: Math.floor(Date.now() / 1000) - 432000,
+    blockTime: Math.floor(Date.now() / 1000) - 259200, // 3 days ago
     meta: { 
       fee: 5000,
-      preBalances: [90000000, 0],
-      postBalances: [85000000, 5000000],
+      preBalances: [12394500000, 0],
+      postBalances: [12379500000, 15000000],
       err: null
     },
     transaction: {
-      signatures: ["mock_signature_5"],
+      signatures: ["2NKpBQQKrwZGgkR3eFfPNVEMrhDCo91Uc1SjurNPLNjvTj8Jn5PGmKKLCWmPp3tt1qT5yg3vkPgfNXgkKrQ6h6D7"],
       message: {
         accountKeys: [
-          { pubkey: { toString: () => "F7Hwf8ib5DVCoiuyGr618Y3gon429Rnd1r5F9R5upump" } },
-          { pubkey: { toString: () => "StakeYvgbJ7T8iLX3GmJMUiKWqAdkM7EQgSKnwQEuSK9" } }
+          { pubkey: { toString: () => "9cLL3BnbhCYvPJM33B5kFJ4Uxgcc81rMVLgo5p7zZFj" } },
+          { pubkey: { toString: () => "6Fns17aoHK4J6qWJDesEiKWrQBnNRxisyx9vw5oi2zXx" } } // Binance
+        ]
+      }
+    }
+  },
+  {
+    blockTime: Math.floor(Date.now() / 1000) - 345600, // 4 days ago
+    meta: { 
+      fee: 5000,
+      preBalances: [12300000000, 0],
+      postBalances: [12290000000, 10000000],
+      err: null
+    },
+    transaction: {
+      signatures: ["3PiCFpuHxN8jKLE8fk8G7XM1Pxjz3cWDDwTYvGnLJrNAQrg6gSrHa1D5gM2c9hQTrVrfePLQBMxV1rB7tNCKYBLk"],
+      message: {
+        accountKeys: [
+          { pubkey: { toString: () => "9cLL3BnbhCYvPJM33B5kFJ4Uxgcc81rMVLgo5p7zZFj" } },
+          { pubkey: { toString: () => "magqgoJRAFgvaCJKPQ8uAG7zb7CWKeTieSeBHYJsNxU" } } // Magic Eden
+        ]
+      }
+    }
+  },
+  {
+    blockTime: Math.floor(Date.now() / 1000) - 432000, // 5 days ago
+    meta: { 
+      fee: 5000,
+      preBalances: [12290000000, 0],
+      postBalances: [12280000000, 10000000],
+      err: null
+    },
+    transaction: {
+      signatures: ["2JJpnZYuMw4NRfY1tgakCYTQJJrKLjnE7GKdtEezJg1XcPiTdf23epynhE2nvc77wJYPwmCbPcj3q42u3CgCtgTm"],
+      message: {
+        accountKeys: [
+          { pubkey: { toString: () => "9cLL3BnbhCYvPJM33B5kFJ4Uxgcc81rMVLgo5p7zZFj" } },
+          { pubkey: { toString: () => "StakeYvgbJ7T8iLX3GmJMUiKWqAdkM7EQgSKnwQEuSK9" } } // Staking Program
+        ]
+      }
+    }
+  },
+  {
+    blockTime: Math.floor(Date.now() / 1000) - 518400, // 6 days ago
+    meta: { 
+      fee: 5000,
+      preBalances: [12280000000, 0],
+      postBalances: [12265000000, 15000000],
+      err: null
+    },
+    transaction: {
+      signatures: ["5YNLaKBrTnyRcwVzPvk9Yit2pPvPkAzPwRhxFa5NN5zB7HfPHLBrf4pjQaN6pBcq9jEtJKVcVsFnZzRApsEVEz32"],
+      message: {
+        accountKeys: [
+          { pubkey: { toString: () => "9cLL3BnbhCYvPJM33B5kFJ4Uxgcc81rMVLgo5p7zZFj" } },
+          { pubkey: { toString: () => "orca1fUm5HZxVjKyZsAjgeDCcmGJw2BKKzXAsyVST" } } // Orca DEX
+        ]
+      }
+    }
+  }
+];
+
+// More realistic data for known entities
+const JUPITER_TRANSACTIONS = [
+  {
+    blockTime: Math.floor(Date.now() / 1000) - 3600,
+    meta: { 
+      fee: 5000,
+      preBalances: [47580000000, 25000000],
+      postBalances: [47535000000, 65000000],
+      err: null
+    },
+    transaction: {
+      signatures: ["4xN8NcbxZk9TKbQJbdPzSZBLZCAsH2z9wJKPWVGtw8Q4YP8BN9k41LWPXpBJebf4KhqUTEZcAj7DaHfUqGqiJCNc"],
+      message: {
+        accountKeys: [
+          { pubkey: { toString: () => "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4" } },
+          { pubkey: { toString: () => "So11111111111111111111111111111111111111112" } } // Wrapped SOL
+        ]
+      }
+    }
+  },
+  {
+    blockTime: Math.floor(Date.now() / 1000) - 14400,
+    meta: { 
+      fee: 5000,
+      preBalances: [47640000000, 12000000],
+      postBalances: [47580000000, 22000000],
+      err: null
+    },
+    transaction: {
+      signatures: ["4Lgy8mJBaFw4n9rjPQCiUGCJUGS2NNQJtb4K7vQvUxoCSRvQbSwTD1VYUNKqP9khjiTcrHszhHi1mzFjn6iNXZmm"],
+      message: {
+        accountKeys: [
+          { pubkey: { toString: () => "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4" } },
+          { pubkey: { toString: () => "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" } } // USDC Token
         ]
       }
     }
@@ -135,7 +228,7 @@ export class SolanaClient {
     console.log('SolanaClient initialized with ' + (this.useMockData ? 'MOCK DATA MODE' : 'multiple RPC endpoints'));
     
     if (this.useMockData) {
-      console.log('Using mock data for demonstration');
+      console.log('Using realistic mock data for demonstration');
     }
   }
 
@@ -161,25 +254,13 @@ export class SolanaClient {
   private getMockDataForAddress(address: string) {
     // Modify mock data based on address
     if (address === 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4') {
-      // Jupiter protocol wallet
+      // Jupiter protocol wallet - more realistic data
       return {
-        balance: 1024.42,
-        transactions: MOCK_TRANSACTIONS.map(tx => ({
-          ...tx,
-          transaction: {
-            ...tx.transaction,
-            message: {
-              ...tx.transaction.message,
-              accountKeys: [
-                { pubkey: { toString: () => address } },
-                { pubkey: { toString: () => "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" } }
-              ]
-            }
-          }
-        }))
+        balance: 475.35,
+        transactions: JUPITER_TRANSACTIONS
       };
     } else {
-      // Default mock data
+      // Default realistic mock data
       return {
         balance: MOCK_BALANCE,
         transactions: MOCK_TRANSACTIONS
