@@ -26,6 +26,7 @@ interface TransactionFlowProps {
   data?: TransactionFlowData;
   isLoading?: boolean;
   walletAddress?: string;
+  fullscreen?: boolean;
 }
 
 // More realistic transaction data based on actual Solana transaction patterns
@@ -40,27 +41,119 @@ const generateMockData = (walletAddress?: string): TransactionFlowData => {
   // Create a shortened version of the wallet address for display
   const shortAddr = walletAddress.substring(0, 4) + '...' + walletAddress.substring(walletAddress.length - 4);
   
+  // Use the wallet address to generate a consistent hash for pseudorandom values
+  const hash = walletAddress.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+  
+  // Helper to generate a "random" but consistent SOL amount
+  const genAmount = (seed: number, min: number, max: number) => {
+    const val = Math.abs((hash * seed) % 1000) / 1000; // 0-1 range
+    return min + val * (max - min);
+  };
+  
+  // Generate more nodes based on the hash
+  const exchanges = ['Binance', 'Coinbase', 'Kraken', 'FTX'];
+  const defi = ['Jupiter', 'Raydium', 'Orca', 'Marinade'];
+  const wallets = ['User Wallet', 'Cold Storage', 'Team Wallet', 'Treasury'];
+  
+  // Create a set of nodes based on the wallet hash
+  const nodes: Node[] = [
+    { id: walletAddress, label: shortAddr, value: 75, type: 'source' }
+  ];
+  
+  // Add exchange nodes
+  for (let i = 0; i < Math.min(2 + Math.abs(hash % 3), exchanges.length); i++) {
+    nodes.push({
+      id: `exchange${i}`,
+      label: exchanges[(hash + i) % exchanges.length],
+      value: 35 + (hash + i) % 25,
+      type: 'exchange'
+    });
+  }
+  
+  // Add defi nodes
+  for (let i = 0; i < Math.min(1 + Math.abs(hash % 3), defi.length); i++) {
+    nodes.push({
+      id: `defi${i}`,
+      label: defi[(hash + i) % defi.length],
+      value: 25 + (hash + i) % 20,
+      type: 'exchange'
+    });
+  }
+  
+  // Add wallet nodes
+  for (let i = 0; i < Math.min(1 + Math.abs(hash % 2), wallets.length); i++) {
+    nodes.push({
+      id: `wallet${i}`,
+      label: wallets[(hash + i) % wallets.length],
+      value: 20 + (hash + i) % 15,
+      type: 'destination'
+    });
+  }
+  
+  // Create edges between nodes
+  const edges: Edge[] = [];
+  
+  // Connect exchange nodes to main wallet
+  nodes.filter(n => n.id.startsWith('exchange')).forEach((node, idx) => {
+    const amount = genAmount(idx + 1, 15, 200).toFixed(2);
+    edges.push({
+      from: node.id,
+      to: walletAddress,
+      value: parseFloat(amount),
+      label: `${amount} SOL`
+    });
+  });
+  
+  // Connect main wallet to DeFi
+  nodes.filter(n => n.id.startsWith('defi')).forEach((node, idx) => {
+    const amount = genAmount(idx + 10, 5, 50).toFixed(2);
+    edges.push({
+      from: walletAddress,
+      to: node.id,
+      value: parseFloat(amount),
+      label: `${amount} SOL`
+    });
+  });
+  
+  // Connect main wallet to other wallets
+  nodes.filter(n => n.id.startsWith('wallet')).forEach((node, idx) => {
+    const amount = genAmount(idx + 20, 10, 100).toFixed(2);
+    edges.push({
+      from: walletAddress,
+      to: node.id,
+      value: parseFloat(amount),
+      label: `${amount} SOL`
+    });
+  });
+  
+  // Add a few more random connections
+  if (nodes.length > 3) {
+    const otherNodes = nodes.filter(n => n.id !== walletAddress);
+    for (let i = 0; i < Math.min(2, otherNodes.length - 1); i++) {
+      const sourceIdx = Math.abs((hash * (i+1)) % otherNodes.length);
+      let targetIdx = Math.abs((hash * (i+2)) % otherNodes.length);
+      if (targetIdx === sourceIdx) targetIdx = (targetIdx + 1) % otherNodes.length;
+      
+      const amount = genAmount(sourceIdx + targetIdx, 1, 25).toFixed(2);
+      edges.push({
+        from: otherNodes[sourceIdx].id,
+        to: otherNodes[targetIdx].id,
+        value: parseFloat(amount),
+        label: `${amount} SOL`
+      });
+    }
+  }
+  
   return {
-    nodes: [
-      { id: walletAddress, label: shortAddr, value: 75, type: 'source' },
-      { id: 'exchange1', label: 'Binance', value: 50, type: 'exchange' },
-      { id: 'dex1', label: 'Jupiter', value: 40, type: 'exchange' },
-      { id: 'wallet1', label: 'User Wallet', value: 30, type: 'destination' },
-      { id: 'staking1', label: 'Staking Pool', value: 35, type: 'destination' },
-      { id: 'nft1', label: 'NFT Marketplace', value: 25, type: 'exchange' },
-    ],
-    edges: [
-      { from: 'exchange1', to: walletAddress, value: 50, label: '50 SOL' },
-      { from: walletAddress, to: 'dex1', value: 15, label: '15 SOL' },
-      { from: walletAddress, to: 'wallet1', value: 10, label: '10 SOL' },
-      { from: walletAddress, to: 'staking1', value: 20, label: '20 SOL' },
-      { from: 'dex1', to: 'nft1', value: 5, label: '5 SOL' },
-      { from: 'nft1', to: walletAddress, value: 3, label: '3 SOL' },
-    ]
+    nodes,
+    edges
   };
 };
 
-export function TransactionFlow({ data, isLoading = false, walletAddress }: TransactionFlowProps) {
+export function TransactionFlow({ data, isLoading = false, walletAddress, fullscreen = false }: TransactionFlowProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Use provided data or generate mock data if data is empty
   const flowData = (data && data.nodes && data.nodes.length > 0) 
@@ -143,7 +236,7 @@ export function TransactionFlow({ data, isLoading = false, walletAddress }: Tran
         line.setAttribute("x2", to.x.toString());
         line.setAttribute("y2", to.y.toString());
         line.setAttribute("stroke", "#9945FF");
-        line.setAttribute("stroke-width", (Math.min(5, Math.max(1, edge.value / 10))).toString());
+        line.setAttribute("stroke-width", (Math.min(5, Math.max(1, edge.value / 20))).toString());
         line.setAttribute("opacity", "0.6");
         svg.appendChild(line);
         
@@ -210,8 +303,34 @@ export function TransactionFlow({ data, isLoading = false, walletAddress }: Tran
         resizeObserver.unobserve(containerRef.current);
       }
     };
-  }, [flowData]);
+  }, [flowData, fullscreen]);
 
+  // For fullscreen mode, render without card
+  if (fullscreen) {
+    return (
+      <div className="absolute inset-0 bg-black/90 z-50 flex flex-col">
+        <div className="p-4 bg-black/50 border-b border-gray-800">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-bold text-white">Transaction Flow Visualization</h2>
+            {flowData && flowData.nodes && flowData.nodes.length > 0 && !isLoading && (
+              <div className="bg-black/40 px-2 py-1 rounded-md text-xs font-mono">
+                {flowData.nodes.length} wallets, {flowData.edges.length} transactions
+              </div>
+            )}
+          </div>
+        </div>
+        {isLoading ? (
+          <div className="flex items-center justify-center flex-1">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-solana-purple"></div>
+          </div>
+        ) : (
+          <div ref={containerRef} className="w-full flex-1"></div>
+        )}
+      </div>
+    );
+  }
+
+  // Regular view with card
   return (
     <Card className="border-border/30">
       <CardHeader className="flex flex-row items-center justify-between">
