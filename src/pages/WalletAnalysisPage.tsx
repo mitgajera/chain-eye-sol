@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WalletActivity } from "@/components/dashboard/WalletActivity";
@@ -254,16 +253,19 @@ const WalletAnalysisPage = () => {
             <TransactionFlow 
               data={walletData?.flowData} 
               isLoading={isLoading} 
+              walletAddress={walletAddress}
             />
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <WalletActivity 
                 data={walletData?.activityData} 
                 isLoading={isLoading} 
+                walletAddress={walletAddress}
               />
               <FundingSources 
                 data={walletData?.fundingData} 
                 isLoading={isLoading} 
+                walletAddress={walletAddress}
               />
             </div>
             
@@ -275,7 +277,11 @@ const WalletAnalysisPage = () => {
             {walletData?.lastRefreshed && (
               <div className="text-xs text-gray-500 text-right">
                 Last updated: {format(new Date(walletData.lastRefreshed), 'HH:mm:ss')} 
-                (auto-refreshes every 30 seconds)
+                {walletData && !walletData.transactions?.length && (
+                  <span className="ml-2 text-yellow-500">
+                    (Using demonstration data due to RPC endpoint limitations)
+                  </span>
+                )}
               </div>
             )}
           </>

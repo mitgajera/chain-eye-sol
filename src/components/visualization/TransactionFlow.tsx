@@ -1,6 +1,7 @@
 
 import { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from '@/hooks/use-toast';
 
 interface Node {
   id: string;
@@ -24,28 +25,47 @@ interface TransactionFlowData {
 interface TransactionFlowProps {
   data?: TransactionFlowData;
   isLoading?: boolean;
+  walletAddress?: string;
 }
 
-const demoTransactionData: TransactionFlowData = {
-  nodes: [
-    { id: 'wallet1', label: 'Source Wallet', value: 75, type: 'source' },
-    { id: 'wallet2', label: 'Exchange', value: 50, type: 'exchange' },
-    { id: 'wallet3', label: 'Intermediate', value: 30, type: 'intermediate' },
-    { id: 'wallet4', label: 'Destination', value: 20, type: 'destination' },
-    { id: 'wallet5', label: 'Exchange 2', value: 35, type: 'exchange' },
-  ],
-  edges: [
-    { from: 'wallet1', to: 'wallet2', value: 50, label: '50 SOL' },
-    { from: 'wallet1', to: 'wallet3', value: 25, label: '25 SOL' },
-    { from: 'wallet2', to: 'wallet4', value: 20, label: '20 SOL' },
-    { from: 'wallet3', to: 'wallet5', value: 15, label: '15 SOL' },
-    { from: 'wallet5', to: 'wallet4', value: 10, label: '10 SOL' },
-  ]
+// More realistic transaction data based on actual Solana transaction patterns
+const generateMockData = (walletAddress?: string): TransactionFlowData => {
+  if (!walletAddress) {
+    return {
+      nodes: [],
+      edges: []
+    };
+  }
+  
+  // Create a shortened version of the wallet address for display
+  const shortAddr = walletAddress.substring(0, 4) + '...' + walletAddress.substring(walletAddress.length - 4);
+  
+  return {
+    nodes: [
+      { id: walletAddress, label: shortAddr, value: 75, type: 'source' },
+      { id: 'exchange1', label: 'Binance', value: 50, type: 'exchange' },
+      { id: 'dex1', label: 'Jupiter', value: 40, type: 'exchange' },
+      { id: 'wallet1', label: 'User Wallet', value: 30, type: 'destination' },
+      { id: 'staking1', label: 'Staking Pool', value: 35, type: 'destination' },
+      { id: 'nft1', label: 'NFT Marketplace', value: 25, type: 'exchange' },
+    ],
+    edges: [
+      { from: 'exchange1', to: walletAddress, value: 50, label: '50 SOL' },
+      { from: walletAddress, to: 'dex1', value: 15, label: '15 SOL' },
+      { from: walletAddress, to: 'wallet1', value: 10, label: '10 SOL' },
+      { from: walletAddress, to: 'staking1', value: 20, label: '20 SOL' },
+      { from: 'dex1', to: 'nft1', value: 5, label: '5 SOL' },
+      { from: 'nft1', to: walletAddress, value: 3, label: '3 SOL' },
+    ]
+  };
 };
 
-export function TransactionFlow({ data, isLoading = false }: TransactionFlowProps) {
+export function TransactionFlow({ data, isLoading = false, walletAddress }: TransactionFlowProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const flowData = data?.nodes?.length ? data : demoTransactionData;
+  // Use provided data or generate mock data if data is empty
+  const flowData = (data && data.nodes && data.nodes.length > 0) 
+    ? data 
+    : generateMockData(walletAddress);
 
   useEffect(() => {
     // In a real application, you would use a library like vis.js, cytoscape, or d3
@@ -55,6 +75,15 @@ export function TransactionFlow({ data, isLoading = false }: TransactionFlowProp
       
       const container = containerRef.current;
       container.innerHTML = '';
+      
+      // If no data or no nodes, show a message
+      if (!flowData || !flowData.nodes || flowData.nodes.length === 0) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'flex items-center justify-center h-full text-gray-400';
+        messageDiv.innerText = 'No transaction data available for this wallet';
+        container.appendChild(messageDiv);
+        return;
+      }
       
       const svgNS = "http://www.w3.org/2000/svg";
       const svg = document.createElementNS(svgNS, "svg");
@@ -185,8 +214,13 @@ export function TransactionFlow({ data, isLoading = false }: TransactionFlowProp
 
   return (
     <Card className="border-border/30">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Transaction Flow Visualization</CardTitle>
+        {flowData && flowData.nodes && flowData.nodes.length > 0 && !isLoading && (
+          <div className="bg-black/40 px-2 py-1 rounded-md text-xs font-mono">
+            {flowData.nodes.length} wallets, {flowData.edges.length} transactions
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         {isLoading ? (
