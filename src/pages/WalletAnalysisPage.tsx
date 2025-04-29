@@ -1,3 +1,4 @@
+
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WalletActivity } from "@/components/dashboard/WalletActivity";
@@ -18,6 +19,23 @@ const WalletAnalysisPage = () => {
   const { walletData, isLoading, isError, analyzeWallet, walletAddress, refetch } = useWalletData();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  
+  // Apply dark mode settings on mount
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('appSettings');
+    if (savedSettings) {
+      try {
+        const parsedSettings = JSON.parse(savedSettings);
+        if (parsedSettings.general.darkMode) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (err) {
+        console.error("Error parsing saved settings:", err);
+      }
+    }
+  }, []);
   
   // Auto-load wallet address from URL parameter if available
   useEffect(() => {
@@ -46,7 +64,7 @@ const WalletAnalysisPage = () => {
     <MainLayout>
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-          <h1 className="text-3xl font-bold text-white mb-4 md:mb-0">Wallet Analysis</h1>
+          <h1 className="text-3xl font-bold mb-4 md:mb-0">Wallet Analysis</h1>
           {walletAddress && (
             <Button 
               variant="outline" 
@@ -80,7 +98,7 @@ const WalletAnalysisPage = () => {
               Try these example wallets:
               <Button 
                 variant="link" 
-                className="text-solana-purple px-1 py-0"
+                className="text-purple-400 px-1 py-0 hover:text-purple-300"
                 onClick={() => analyzeWallet('F7Hwf8ib5DVCoiuyGr618Y3gon429Rnd1r5F9R5upump')}
               >
                 Test Wallet
@@ -88,7 +106,7 @@ const WalletAnalysisPage = () => {
               or
               <Button 
                 variant="link" 
-                className="text-solana-purple px-1 py-0"
+                className="text-purple-400 px-1 py-0 hover:text-purple-300"
                 onClick={() => analyzeWallet('JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4')}
               >
                 Jupiter

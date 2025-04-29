@@ -15,6 +15,23 @@ const TransactionFlowPage = () => {
   const [searchParams] = useSearchParams();
   const [fullscreen, setFullscreen] = useState(false);
   
+  // Apply dark mode settings on mount
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('appSettings');
+    if (savedSettings) {
+      try {
+        const parsedSettings = JSON.parse(savedSettings);
+        if (parsedSettings.general.darkMode) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (err) {
+        console.error("Error parsing saved settings:", err);
+      }
+    }
+  }, []);
+  
   // Auto-load wallet address from URL parameter if available
   useEffect(() => {
     const addressParam = searchParams.get('address');
@@ -97,7 +114,7 @@ const TransactionFlowPage = () => {
         </div>
         
         {!fullscreen && (
-          <Card className="border-border/30">
+          <Card className="border-gray-800 bg-black/20 backdrop-blur-sm">
             <CardHeader>
               <CardTitle>Flow Settings</CardTitle>
             </CardHeader>

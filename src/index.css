@@ -43,6 +43,22 @@
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 230 25% 15%;
     --sidebar-ring: 262 100% 63%;
+    
+    /* Light mode override for dark mode switch */
+    --light-background: 0 0% 100%;
+    --light-foreground: 240 10% 3.9%;
+    --light-card: 0 0% 100%;
+    --light-card-foreground: 240 10% 3.9%;
+    --light-border: 240 5.9% 90%;
+  }
+  
+  /* Dark mode class for toggle */
+  .dark {
+    --background: 230 25% 7%;
+    --foreground: 210 40% 98%;
+    --card: 228 22% 10%;
+    --card-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
   }
 }
 
@@ -52,7 +68,12 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-colors duration-300;
+  }
+
+  /* Dark mode transitions */
+  body, .card, .button, .input {
+    @apply transition-colors duration-300;
   }
 
   /* Custom scrollbar */
@@ -72,5 +93,19 @@
 
   ::-webkit-scrollbar-thumb:hover {
     background: #9945FF;
+  }
+  
+  /* Glass card styles */
+  .glass-card {
+    @apply backdrop-blur-xl bg-white/5 border border-white/10 shadow-lg;
+  }
+  
+  /* Gradient backgrounds */
+  .bg-gradient-purple {
+    @apply bg-gradient-to-br from-purple-900/40 to-indigo-900/20 backdrop-blur-sm;
+  }
+  
+  .bg-gradient-blue {
+    @apply bg-gradient-to-br from-blue-900/40 to-indigo-900/20 backdrop-blur-sm;
   }
 }

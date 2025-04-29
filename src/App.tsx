@@ -1,47 +1,39 @@
 
+import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import TransactionFlowPage from "./pages/TransactionFlowPage";
-import WalletAnalysisPage from "./pages/WalletAnalysisPage";
-import ClusteringPage from "./pages/ClusteringPage";
-import EntityLabelingPage from "./pages/EntityLabelingPage";
-import SettingsPage from "./pages/SettingsPage"; 
-import NotFound from "./pages/NotFound";
 
-// Configure QueryClient with better error handling
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 3, // Increase retry attempts
-      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000), // Exponential backoff with a cap
-      refetchOnWindowFocus: false,
-      staleTime: 60000, // Data is fresh for 1 minute
-    },
-  },
-});
+import Index from './pages/Index';
+import WalletAnalysisPage from './pages/WalletAnalysisPage';
+import TransactionFlowPage from './pages/TransactionFlowPage';
+import ClusteringPage from './pages/ClusteringPage';
+import EntityLabelingPage from './pages/EntityLabelingPage';
+import SettingsPage from './pages/SettingsPage';
+import NotFound from './pages/NotFound';
+import { initializeTheme } from './lib/themeManager';
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+import './App.css';
+
+function App() {
+  // Initialize theme on app startup
+  useEffect(() => {
+    initializeTheme();
+  }, []);
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/analysis" element={<WalletAnalysisPage />} />
+        <Route path="/flow" element={<TransactionFlowPage />} />
+        <Route path="/clustering" element={<ClusteringPage />} />
+        <Route path="/entities" element={<EntityLabelingPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
       <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/flow" element={<TransactionFlowPage />} />
-          <Route path="/wallet" element={<WalletAnalysisPage />} />
-          <Route path="/clustering" element={<ClusteringPage />} />
-          <Route path="/entities" element={<EntityLabelingPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    </Router>
+  );
+}
 
 export default App;
