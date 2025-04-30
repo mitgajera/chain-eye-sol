@@ -2,8 +2,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
-import fs from 'fs';
-
 
 export default defineConfig(({ mode }: { mode: string }) => ({
   server: {
@@ -11,11 +9,8 @@ export default defineConfig(({ mode }: { mode: string }) => ({
     port: 8080,
   },
   plugins: [
-    react({
-      jsxImportSource: 'react',
-    }),
-    mode === 'development' &&
-    componentTagger(),
+    react(),
+    mode === 'development' && componentTagger(),
     {
       name: 'vite-plugin-mock-rpc-websockets',
       resolveId(id) {
@@ -27,8 +22,7 @@ export default defineConfig(({ mode }: { mode: string }) => ({
       },
       load(id) {
         if (id.includes('rpc-websocket-mock.js')) {
-          const mockContent = `
-            // Mock implementation for rpc-websockets
+          return `
             export default class MockWebSocketClient {
               on() { return this; }
               off() { return this; }
@@ -38,7 +32,6 @@ export default defineConfig(({ mode }: { mode: string }) => ({
             }
             export const createRpc = () => new MockWebSocketClient();
           `;
-          return mockContent;
         }
         return undefined;
       }
@@ -50,24 +43,6 @@ export default defineConfig(({ mode }: { mode: string }) => ({
     },
   },
   optimizeDeps: {
-    esbuildOptions: {
-      jsx: 'automatic',
-    },
     exclude: ['rpc-websockets/dist/lib/client', 'rpc-websockets/dist/lib/client/websocket.browser'],
-  },
-  build: {
-    commonjsOptions: {
-      include: [],
-    },
-    rollupOptions: {
-      // External packages that shouldn't be bundled
-      external: [],
-      output: {
-        manualChunks: {
-          // Optimize chunks as needed
-          'react-vendor': ['react', 'react-dom'],
-        }
-      }
-    }
-  },
+  }
 }));
