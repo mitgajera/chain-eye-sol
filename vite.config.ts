@@ -4,12 +4,10 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 
 export default defineConfig(({ mode }: { mode: string }) => ({
-  base: './',  // Set base path to relative for better compatibility
+  base: '/', // Change from './' to '/' for Vercel
   build: {
-    outDir: 'dist',  // Explicitly set output directory
-    assetsDir: 'assets',  // Explicitly set assets directory
-    emptyOutDir: true,  // Clean output directory before building
-    sourcemap: false,  // Disable source maps for production
+    outDir: 'dist',
+    emptyOutDir: true,
   },
   server: {
     host: "::",

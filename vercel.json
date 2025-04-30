@@ -11,6 +11,7 @@
   ],
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "framework": "vite",
   "routes": [
     {
       "src": "/assets/(.*)",
@@ -28,5 +29,8 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
