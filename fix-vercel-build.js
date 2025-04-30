@@ -12,14 +12,15 @@ function createMockModules() {
     fs.mkdirSync(dir, { recursive: true });
   }
 
-  // Create jsx-runtime.js with mocked exports
+  // Create jsx-runtime.js with CommonJS-compatible exports
   fs.writeFileSync('./node_modules/react/jsx-runtime.js', `
-    import React from 'react';
-    export const jsx = React.createElement;
-    export const jsxs = React.createElement;
-    export const Fragment = React.Fragment;
+    const React = require('react');
+    exports.jsx = React.createElement;
+    exports.jsxs = React.createElement;
+    exports.Fragment = React.Fragment;
   `);
+  
+  console.log('Created mock modules for Vercel build');
 }
 
 createMockModules();
-console.log('Created mock modules for Vercel build');
