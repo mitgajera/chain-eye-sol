@@ -1,7 +1,7 @@
-
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from "@/components/ui/toaster";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import Index from './pages/Index';
 import WalletAnalysisPage from './pages/WalletAnalysisPage';
@@ -12,7 +12,8 @@ import SettingsPage from './pages/SettingsPage';
 import NotFound from './pages/NotFound';
 import { initializeTheme } from './lib/themeManager';
 
-import './App.css';
+// Create a client
+const queryClient = new QueryClient();
 
 function App() {
   // Initialize theme on app startup
@@ -21,18 +22,21 @@ function App() {
   }, []);
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/analysis" element={<WalletAnalysisPage />} />
-        <Route path="/flow" element={<TransactionFlowPage />} />
-        <Route path="/clustering" element={<ClusteringPage />} />
-        <Route path="/entities" element={<EntityLabelingPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <Toaster />
-    </Router>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/analysis" element={<WalletAnalysisPage />} />
+          <Route path="/wallet-analysis" element={<WalletAnalysisPage />} /> {/* Add this to support both paths */}
+          <Route path="/flow" element={<TransactionFlowPage />} />
+          <Route path="/clustering" element={<ClusteringPage />} />
+          <Route path="/entities" element={<EntityLabelingPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Toaster />
+      </Router>
+    </QueryClientProvider>
   );
 }
 

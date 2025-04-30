@@ -1,34 +1,39 @@
+# Chain-Eye-Sol: Solana Forensic Analysis Tool
 
-# Solana Forensic Analysis Tool
+A comprehensive blockchain forensics and visualization tool for tracking and analyzing on-chain fund movements in the Solana ecosystem. This tool provides sophisticated transaction flow mapping, detailed wallet analysis, and entity identification across the Solana blockchain.
 
-A comprehensive tool for tracking and visualizing on-chain fund movements in the Solana ecosystem. This tool provides sophisticated transaction flow mapping, detailed wallet analysis, and entity identification across the Solana blockchain.
+![ChainEye Screenshot](public/placeholder.svg)
 
 ## Features
 
 ### Transaction Flow Visualization
 - Interactive flow charts showing connections between wallets
 - Visual differentiation between exchanges, sources, and destinations
-- Fund flow tracking with transaction amounts
+- Fund flow tracking with transaction amounts and directions
+- Hover details for transaction information
 
 ### Wallet Analysis
 - Comprehensive funding source breakdown
-- Activity patterns and transaction history
+- Activity patterns and transaction history visualization
 - First and last activity timestamps
-- Transaction volume analysis
+- Transaction volume analysis with time-series graphs
 
 ### Transaction Clustering
-- Related transaction grouping
-- Identification of associated wallets
+- Related transaction grouping by behavior patterns
+- Identification of associated wallets and entities
 - Detection of exchange and marketplace interactions
+- Cluster visualization with force-directed graphs
 
 ### Entity and Exchange Labeling
 - Built-in database of known entities (exchanges, marketplaces, protocols)
+- Add and manage custom entity labels
 - Automatic entity recognition and categorization
 - Visualization of interactions with known entities
 
 ## Technical Implementation
 
 - Built with React, TypeScript, and Tailwind CSS
+- Component library built with Shadcn UI
 - Responsive design for desktop and mobile viewing
 - Multiple RPC endpoint fallback system for reliable data access
 - Comprehensive error handling with graceful fallbacks
@@ -42,8 +47,8 @@ A comprehensive tool for tracking and visualizing on-chain fund movements in the
 
 ### Installation
 1. Clone the repository:
-```
-git clone https://github.com/yourusername/solana-forensic-analysis-tool.git
+```bash
+git clone https://github.com/yourusername/chain-eye-sol.git
 ```
 
 2. Install dependencies:
