@@ -2,8 +2,6 @@
 
 A comprehensive blockchain forensics and visualization tool for tracking and analyzing on-chain fund movements in the Solana ecosystem. This tool provides sophisticated transaction flow mapping, detailed wallet analysis, and entity identification across the Solana blockchain.
 
-![ChainEye Screenshot](public/placeholder.svg)
-
 ## Features
 
 ### Transaction Flow Visualization
@@ -48,12 +46,12 @@ A comprehensive blockchain forensics and visualization tool for tracking and ana
 ### Installation
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/chain-eye-sol.git
+git clone https://github.com/mitgajera/chain-eye-sol.git
 ```
 
 2. Install dependencies:
 ```
-cd solana-forensic-analysis-tool
+cd chain-eye-sol
 npm install
 ```
 
@@ -62,7 +60,7 @@ npm install
 npm run dev
 ```
 
-4. Open your browser and navigate to `http://localhost:5173`
+4. Open your browser and navigate to `http://localhost:8080`
 
 ## Usage
 
