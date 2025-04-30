@@ -42,21 +42,6 @@ export default defineConfig(({ mode }: { mode: string }) => ({
         }
         return undefined;
       }
-    },
-    {
-      name: 'fix-radix-imports',
-      transform(code, id) {
-        // Fix both direct and nested Radix UI context modules
-        if (id.includes('@radix-ui/react-context/dist/index.mjs') || 
-            id.includes('node_modules/@radix-ui/react-collection/node_modules/@radix-ui/react-context/dist/index')) {
-          return code
-            .replace(`import { jsx } from "react/jsx-runtime";`, 
-                     `import * as jsxRuntime from "react/jsx-runtime"; const { jsx } = jsxRuntime;`)
-            .replace(`import { useMemo } from "react";`, 
-                     `import React from "react"; const { useMemo } = React;`);
-        }
-        return undefined;
-      }
     }
   ].filter(Boolean),
   resolve: {

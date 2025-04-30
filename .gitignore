@@ -17,7 +17,6 @@ dist
 dist-ssr
 build
 *.local
-vercel.json
 package-lock.json
 
 # Lock files (if not sharing with team)
@@ -67,6 +66,7 @@ __snapshots__
 .settings/
 *.sublime-workspace
 *.sublime-project
+.npm
 
 # Temporary files
 .tmp
