@@ -18,6 +18,7 @@ dist-ssr
 build
 *.local
 vercel.json
+package-lock.json
 
 # Lock files (if not sharing with team)
 package-lock.json
@@ -78,3 +79,11 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 Icon?
+
+# Vercel
+.vercel
+.vercel_build_output
+.turbo
+
+# Generated files
+fix-radix.js
