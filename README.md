@@ -46,7 +46,7 @@ A comprehensive blockchain forensics and visualization tool for tracking and ana
 ### Installation
 1. Clone the repository:
 ```bash
-git clone https://github.com/mitgajera/chain-eye-sol.git
+git clone https://github.com/yourusername/chain-eye-sol.git
 ```
 
 2. Install dependencies:
